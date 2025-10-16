@@ -1,4 +1,4 @@
-package com.anil.crm.entities;
+package com.anil.crm.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,6 +19,9 @@ public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
 
     @Column(name = "full_name", length = 100)
     private String fullName;

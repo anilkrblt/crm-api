@@ -1,9 +1,9 @@
 package com.anil.crm.bootstrap;
 
-import com.anil.crm.entities.Agent;
-import com.anil.crm.entities.Customer;
-import com.anil.crm.entities.Ticket;
-import com.anil.crm.entities.TicketComment;
+import com.anil.crm.domain.Agent;
+import com.anil.crm.domain.Customer;
+import com.anil.crm.domain.Ticket;
+import com.anil.crm.domain.TicketComment;
 import com.anil.crm.repositories.AgentRepository;
 import com.anil.crm.repositories.CustomerRepository;
 import com.anil.crm.repositories.TicketCommentRepository;

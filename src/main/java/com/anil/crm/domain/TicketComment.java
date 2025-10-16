@@ -1,4 +1,4 @@
-package com.anil.crm.entities;
+package com.anil.crm.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,6 +20,9 @@ public class TicketComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "ticket_id")

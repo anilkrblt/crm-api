@@ -1,4 +1,4 @@
-package com.anil.crm.entities;
+package com.anil.crm.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,6 +21,9 @@ public class Agent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @Column(name = "full_name", length = 100)
     private String fullName;
 
@@ -33,12 +36,11 @@ public class Agent {
     @Column(name = "department", length = 100)
     private String department;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
 
 
 }
