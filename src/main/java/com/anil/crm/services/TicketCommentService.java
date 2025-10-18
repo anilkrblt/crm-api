@@ -2,10 +2,11 @@ package com.anil.crm.services;
 
 import com.anil.crm.web.models.TicketCommentDto;
 import java.util.List;
+import java.util.Optional;
 
 public interface TicketCommentService {
 
-    TicketCommentDto getCommentById(Long id);
+    Optional<TicketCommentDto> getCommentById(Long id);
 
     List<TicketCommentDto> getCommentsByTicketId(Long ticketId);
 
