@@ -3,6 +3,7 @@ package com.anil.crm.web.controllers;
 import com.anil.crm.services.TicketCommentService;
 import com.anil.crm.web.models.TicketCommentDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class TicketCommentsController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TicketCommentDto> getCommentById(@PathVariable Long id) {
-        TicketCommentDto comment = ticketCommentService.getCommentById(id);
+        TicketCommentDto comment = ticketCommentService.getCommentById(id).orElse(null);
         return ResponseEntity.ok(comment);
     }
 
