@@ -1,16 +1,11 @@
 package com.anil.crm.bootstrap;
 
-import com.anil.crm.domain.Agent;
-import com.anil.crm.domain.Customer;
-import com.anil.crm.domain.Ticket;
-import com.anil.crm.domain.TicketComment;
-import com.anil.crm.repositories.AgentRepository;
-import com.anil.crm.repositories.CustomerRepository;
-import com.anil.crm.repositories.TicketCommentRepository;
-import com.anil.crm.repositories.TicketRepository;
+
+import com.anil.crm.domain.*;
+import com.anil.crm.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-//import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -23,70 +18,101 @@ public class DataInitializer implements CommandLineRunner {
     private final TicketCommentRepository ticketCommentRepository;
     private final TicketRepository ticketRepository;
     private final AgentRepository agentRepository;
-//    private final PasswordEncoder passwordEncoder;
-
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         ticketCommentRepository.deleteAll();
         ticketRepository.deleteAll();
         customerRepository.deleteAll();
         agentRepository.deleteAll();
+        userRepository.deleteAll();
+
+
+
+        User agentUser1 = User.builder()
+                .firstName("Anil")
+                .lastName("karabulut")
+                .email("anil.karabulut@hotmail.com")
+                .password(passwordEncoder.encode("123456"))
+                .role(Role.ADMIN)
+                .build();
+
 
         Agent agent1 = Agent.builder()
-                .fullName("Ahmet Yılmaz")
-                .email("ahmet.yilmaz@company.com")
-//                .passwordHash(passwordEncoder.encode("123456"))
-                .passwordHash("asd")
                 .department("Teknik Destek")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .build();
-
-        Agent agent2 = Agent.builder()
-                .fullName("Ayşe Demir")
-                .email("ayse.demir@company.com")
-//                .passwordHash(passwordEncoder.encode("123456"))
-                .passwordHash("asd")
-                .department("Müşteri Hizmetleri")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .user(agentUser1)
                 .build();
 
         agentRepository.save(agent1);
+
+
+        User agentUser2 = User.builder()
+                .firstName("Ayşe")
+                .lastName("Demir")
+                .email("ayse.demir@company.com")
+                .password(passwordEncoder.encode("123456"))
+                .role(Role.AGENT)
+                .build();
+
+        Agent agent2 = Agent.builder()
+                .department("Müşteri Hizmetleri")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .user(agentUser2)
+                .build();
+
         agentRepository.save(agent2);
 
 
-        Customer customer1 = Customer.builder()
-                .fullName("Ali Veli")
+        User customerUser1 = User.builder()
+                .firstName("Ali")
+                .lastName("Veli")
                 .email("ali.veli@email.com")
-//                .passwordHash(passwordEncoder.encode("123456"))
-                .passwordHash("asd")
+                .password(passwordEncoder.encode("123456"))
+                .role(Role.CUSTOMER) // Rolü CUSTOMER
+                .build();
+
+
+        Customer customer1 = Customer.builder()
                 .phone("+905555555555")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .build();
-
-        Customer customer2 = Customer.builder()
-                .fullName("Ayşe Kara")
-                .email("ayse.kara@email.com")
-//                .passwordHash(passwordEncoder.encode("123456"))
-                .passwordHash("asd")
-                .phone("+905554444444")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .user(customerUser1)
                 .build();
 
         customerRepository.save(customer1);
+
+
+        User customerUser2 = User.builder()
+                .firstName("Ayşe")
+                .lastName("Kara")
+                .email("ayse.kara@email.com")
+                .password(passwordEncoder.encode("123456"))
+                .role(Role.CUSTOMER)
+                .build();
+
+        Customer customer2 = Customer.builder()
+                .phone("+905554444444")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .user(customerUser2)
+                .build();
+
         customerRepository.save(customer2);
+
+
 
         Ticket ticket1 = Ticket.builder()
                 .customer(customer1)
                 .agent(agent1)
                 .subject("Ürün iade talebi")
                 .description("Satın aldığım ürünü iade etmek istiyorum")
-                .status("OPEN")
-                .priority("MEDIUM")
+                .status(TicketStatus.OPEN)
+                .priority(TicketPriority.MEDIUM)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -96,8 +122,8 @@ public class DataInitializer implements CommandLineRunner {
                 .agent(agent2)
                 .subject("Teknik sorun")
                 .description("Uygulama açılmıyor, hata veriyor")
-                .status("IN_PROGRESS")
-                .priority("HIGH")
+                .status(TicketStatus.IN_PROGRESS)
+                .priority(TicketPriority.HIGH)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -108,23 +134,17 @@ public class DataInitializer implements CommandLineRunner {
 
         TicketComment comment1 = TicketComment.builder()
                 .ticket(ticket1)
-                .authorType("CUSTOMER")
-                .customer(customer1)
+                .author(customer1.getUser())
                 .comment("Lütfen talebimi hızlıca işleme alın.")
-                .createdAt(LocalDateTime.now())
                 .build();
 
         TicketComment comment2 = TicketComment.builder()
                 .ticket(ticket1)
-                .authorType("AGENT")
-                .agent(agent1)
+                .author(agent1.getUser())
                 .comment("Talebiniz işleme alındı, en kısa sürede dönüş yapılacaktır.")
-                .createdAt(LocalDateTime.now())
                 .build();
 
         ticketCommentRepository.save(comment1);
         ticketCommentRepository.save(comment2);
-
-
     }
 }

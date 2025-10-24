@@ -5,84 +5,86 @@ import com.anil.crm.web.models.AgentDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/agents")
 @RequiredArgsConstructor
-@Tag(name = "Agents", description = "CRUD operations for agents")
+@Tag(name = "Agents", description = "Ajan (çalışan) kayıt ve profil işlemleri")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AgentsController {
 
     private final AgentService agentService;
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get agent by ID", description = "Retrieve a single agent by their unique ID")
+    @Operation(summary = "Bir ajanı ID ile getir")
     public ResponseEntity<AgentDto> getAgentById(
-            @Parameter(description = "ID of the agent to retrieve", required = true)
-            @PathVariable Long id) {
+            @Parameter(description = "Ajan ID'si") @PathVariable Long id) {
 
-        return agentService.getAgentById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(agentService.getAgentById(id));
     }
 
     @GetMapping
-    @Operation(summary = "Get all agents", description = "Retrieve a list of all agents")
+    @Operation(summary = "Tüm ajanları listele")
     public ResponseEntity<List<AgentDto>> getAllAgents() {
         return ResponseEntity.ok(agentService.getAllAgents());
     }
 
     @GetMapping("/search")
-    @Operation(summary = "Search agents by name", description = "Retrieve agents whose names contain the given query string")
-    public ResponseEntity<List<AgentDto>> getAgentsByName(
-            @Parameter(description = "Name query string", required = true)
-            @RequestParam String name) {
+    @Operation(summary = "Ajanları isme göre ara")
+    public ResponseEntity<List<AgentDto>> searchAgentsByName(
+            @Parameter(description = "Aranacak isim veya soyisim") @RequestParam String name) {
 
-        return ResponseEntity.ok(agentService.getAgentsByName(name));
+        return ResponseEntity.ok(agentService.getAgentsByUserName(name));
     }
 
     @GetMapping("/department/{department}")
-    @Operation(summary = "Get agents by department", description = "Retrieve all agents working in a specific department")
+    @Operation(summary = "Departmana göre ajanları getir")
     public ResponseEntity<List<AgentDto>> getAgentsByDepartment(
-            @Parameter(description = "Department name", required = true)
-            @PathVariable String department) {
+            @Parameter(description = "Departman adı") @PathVariable String department) {
 
         return ResponseEntity.ok(agentService.getAgentsByDepartment(department));
     }
 
     @PostMapping
-    @Operation(summary = "Create a new agent", description = "Add a new agent to the system")
+    @Operation(summary = "Yeni bir ajan kaydı oluştur (Registration)")
     public ResponseEntity<AgentDto> createAgent(
-            @Parameter(description = "Agent details to create", required = true)
+            @Validated(AgentDto.CreateValidation.class)
             @RequestBody AgentDto agentDto) {
 
-        AgentDto savedAgent = agentService.saveAgent(agentDto);
-        return ResponseEntity.ok(savedAgent);
+        AgentDto savedAgent = agentService.createAgent(agentDto);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedAgent.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(savedAgent);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update an existing agent", description = "Update an existing agent by ID")
+    @Operation(summary = "Mevcut bir ajanı güncelle")
     public ResponseEntity<AgentDto> updateAgent(
-            @Parameter(description = "ID of the agent to update", required = true)
-            @PathVariable Long id,
-            @Parameter(description = "Updated agent details", required = true)
-            @RequestBody AgentDto agentDto) {
+            @Parameter(description = "Güncellenecek ajan ID'si") @PathVariable Long id,
+            @Valid @RequestBody AgentDto agentDto) {
 
-        agentDto.setId(id);
-        return agentService.updateAgent(agentDto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        AgentDto updatedAgent = agentService.updateAgent(id, agentDto);
+        return ResponseEntity.ok(updatedAgent);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete an agent", description = "Delete an agent by their ID")
+    @Operation(summary = "Bir ajanı sil")
     public ResponseEntity<Void> deleteAgent(
-            @Parameter(description = "ID of the agent to delete", required = true)
-            @PathVariable Long id) {
+            @Parameter(description = "Silinecek ajan ID'si") @PathVariable Long id) {
 
         agentService.deleteAgentById(id);
         return ResponseEntity.noContent().build();

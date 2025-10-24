@@ -40,10 +40,13 @@ public class Ticket {
     private String description;
 
     @Column(name = "status", length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private TicketStatus status;
 
     @Column(name = "priority", length = 50)
-    private String priority;
+    @Enumerated(EnumType.STRING)
+    private TicketPriority priority;
+
 
     @Column(name = "created_at")
     @CreationTimestamp

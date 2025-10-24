@@ -1,8 +1,12 @@
 package com.anil.crm.web.models;
 
-import com.anil.crm.domain.Agent;
-import com.anil.crm.domain.Customer;
-import jakarta.validation.constraints.*;
+// Gerekli domain importları (Enum'lar için)
+import com.anil.crm.domain.TicketPriority;
+import com.anil.crm.domain.TicketStatus;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,13 +20,15 @@ import java.time.LocalDateTime;
 @Builder
 public class TicketDto {
 
-    @Null(message = "Id alanı girilemez, sistem tarafından atanacaktır")
+
     private Long id;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    @NotNull(message = "Müşteri bilgisi boş olamaz")
-    private Customer customer;
+    private CustomerDto customer;
 
-    private Agent agent;
+    private AgentDto agent;
+
 
     @NotBlank(message = "Konu boş olamaz")
     @Size(max = 255, message = "Konu 255 karakterden uzun olamaz")
@@ -31,14 +37,10 @@ public class TicketDto {
     @NotBlank(message = "Açıklama boş olamaz")
     private String description;
 
-    @NotBlank(message = "Durum boş olamaz")
-    @Pattern(regexp = "OPEN|PENDING|RESOLVED", message = "Durum OPEN, PENDING veya RESOLVED olmalıdır")
-    private String status;
+    @NotNull(message = "Durum boş olamaz")
+    private TicketStatus status;
 
-    @NotBlank(message = "Öncelik boş olamaz")
-    @Pattern(regexp = "LOW|MEDIUM|HIGH", message = "Öncelik LOW, MEDIUM veya HIGH olmalıdır")
-    private String priority;
+    @NotNull(message = "Öncelik boş olamaz")
+    private TicketPriority priority;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

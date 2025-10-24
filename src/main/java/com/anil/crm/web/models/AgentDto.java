@@ -1,9 +1,8 @@
 package com.anil.crm.web.models;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,27 +17,29 @@ import java.time.LocalDateTime;
 @Builder
 public class AgentDto {
 
-    @Null(message = "Id alanı girilemez, sistem tarafından atanacaktır")
-    private Long id;
-
-    @NotBlank(message = "İsim alanı boş olamaz")
-    @Size(max = 100, message = "İsim 100 karakterden uzun olamaz")
-    private String fullName;
-
-    @NotBlank(message = "Email boş olamaz")
-    @Email(message = "Geçerli bir email giriniz")
-    private String email;
-
-    @NotBlank(message = "Şifre boş olamaz")
-    @Size(min = 6, message = "Şifre en az 6 karakter olmalıdır")
-    private String passwordHash;
-
-    @NotBlank(message = "Departman bilgisi boş olamaz")
-    @Size(max = 100, message = "Departman adı 100 karakterden uzun olamaz")
-    private String department;
-
+    private Long id; // Agent.id
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-}
 
+    @NotBlank(message = "İsim alanı boş olamaz")
+    private String firstName;
+
+    @NotBlank(message = "Soyisim alanı boş olamaz")
+    private String lastName;
+
+    @Email
+    @NotBlank(message = "Email boş olamaz")
+    private String email;
+
+    @NotBlank(message = "Departman alanı boş olamaz")
+    private String department;
+
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotBlank(message = "Şifre boş olamaz", groups = CreateValidation.class)
+    @Size(min = 6, message = "Şifre en az 6 karakter olmalıdır")
+    private String password;
+
+    public interface CreateValidation {}
+}

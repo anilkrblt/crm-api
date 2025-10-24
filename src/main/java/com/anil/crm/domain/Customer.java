@@ -23,14 +23,6 @@ public class Customer {
     @Version
     private Long version;
 
-    @Column(name = "full_name", length = 100)
-    private String fullName;
-
-    @Column(name = "email", nullable = false, unique = true, length = 100)
-    private String email;
-
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash;
 
     @Column(name = "phone", length = 20)
     private String phone;
@@ -41,4 +33,7 @@ public class Customer {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToOne(cascade = CascadeType.ALL, optional = false, orphanRemoval = true)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true)
+    private User user;
 }

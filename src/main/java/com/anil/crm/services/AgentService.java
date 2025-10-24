@@ -1,27 +1,23 @@
 package com.anil.crm.services;
 
 import com.anil.crm.web.models.AgentDto;
-
 import java.util.List;
-import java.util.Optional;
 
 public interface AgentService {
 
-    Optional<AgentDto> getAgentById(Long id);
-
-    List<AgentDto> getAgentsByName(String name);
-
     List<AgentDto> getAllAgents();
 
-    AgentDto saveAgent(AgentDto agentDto);
+    AgentDto getAgentById(Long id);
 
-    Optional<AgentDto> updateAgent(AgentDto agentDto);
+    AgentDto getAgentByEmail(String email);
 
-    void deleteAgentById(Long id);
+    List<AgentDto> getAgentsByUserName(String name);
 
     List<AgentDto> getAgentsByDepartment(String department);
+
+    AgentDto createAgent(AgentDto agentDto);
+
+    AgentDto updateAgent(Long id, AgentDto agentDto);
+
+    void deleteAgentById(Long id);
 }
-
-
-
-

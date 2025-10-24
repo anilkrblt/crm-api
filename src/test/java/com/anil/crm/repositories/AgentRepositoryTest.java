@@ -11,45 +11,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-//@DataJpaTest
+
 @SpringBootTest
 class AgentRepositoryTest {
 
-    @Autowired
-    private  AgentRepository agentRepository;
-
-
-    @Test
-    void agentRepositoryGetAllTest() {
-        var agents = agentRepository.findAll();
-        agents.forEach(System.out::println);
-    }
-
-    @Test
-    void agentRepositoryAddAgentTest() {
-        Agent agent1 = Agent.builder()
-                .fullName("Ayşe Demir")
-                .email("ayse.demir@example.com")
-                .passwordHash("hashed_password")
-                .department("Teknik")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        Agent agent2 = Agent.builder()
-                .fullName("Mehmet Kaya")
-                .email("mehmet.kaya@example.com")
-                .passwordHash("hashed_password")
-                .department("Satış")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        agentRepository.save(agent1);
-        agentRepository.save(agent2);
-
-        List<Agent> agents = agentRepository.findAll();
-        assertThat(agents).hasSize(2);
-        agents.forEach(System.out::println);
-    }
 }

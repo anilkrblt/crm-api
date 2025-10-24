@@ -1,12 +1,15 @@
 package com.anil.crm.services;
 
+import com.anil.crm.domain.TicketPriority;
+import com.anil.crm.domain.TicketStatus;
 import com.anil.crm.web.models.TicketDto;
+
 import java.util.List;
-import java.util.Optional;
+
 
 public interface TicketService {
 
-    Optional<TicketDto> getTicketById(Long id);
+    TicketDto getTicketById(Long id);
 
     List<TicketDto> getAllTickets();
 
@@ -14,16 +17,15 @@ public interface TicketService {
 
     List<TicketDto> getTicketsByAgentId(Long agentId);
 
-    List<TicketDto> getTicketsByStatus(String status);
+    List<TicketDto> getTicketsByStatus(TicketStatus status);
 
-    List<TicketDto> getTicketsByPriority(String priority);
+    List<TicketDto> getTicketsByPriority(TicketPriority priority);
 
     TicketDto createTicket(TicketDto ticketDto);
 
-    TicketDto updateTicket(TicketDto ticketDto);
+    TicketDto updateTicket(Long id, TicketDto ticketDto);
 
     void deleteTicketById(Long id);
 
-    // opsiyonel
-    TicketDto updateTicketStatus(Long ticketId, String status);
+    TicketDto updateTicketStatus(Long ticketId, TicketStatus status);
 }

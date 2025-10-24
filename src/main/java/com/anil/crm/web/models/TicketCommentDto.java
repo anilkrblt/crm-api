@@ -1,8 +1,8 @@
 package com.anil.crm.web.models;
 
+import com.anil.crm.domain.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,20 +16,19 @@ import java.time.LocalDateTime;
 @Builder
 public class TicketCommentDto {
 
-    @Null
     private Long id;
+    private LocalDateTime createdAt;
+
+    private String authorFirstName;
+
+    private String authorLastName;
+
+    private Role authorRole;
+
 
     @NotNull(message = "Ticket ID boş olamaz")
     private Long ticketId;
 
-    @NotBlank(message = "Yazar tipi boş olamaz")
-    private String authorType;
-
-    private Long customerId;
-    private Long agentId;
-
     @NotBlank(message = "Yorum boş olamaz")
     private String comment;
-
-    private LocalDateTime createdAt;
 }
