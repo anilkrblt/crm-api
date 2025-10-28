@@ -6,7 +6,6 @@ import com.anil.crm.web.models.TicketDto;
 
 import java.util.List;
 
-
 public interface TicketService {
 
     TicketDto getTicketById(Long id);
@@ -15,7 +14,9 @@ public interface TicketService {
 
     List<TicketDto> getTicketsByCustomerId(Long customerId);
 
-    List<TicketDto> getTicketsByAgentId(Long agentId);
+    List<TicketDto> getTicketsByAssignedAgentId(Long agentId);
+
+    List<TicketDto> getTicketsByDepartmentId(Long departmentId);
 
     List<TicketDto> getTicketsByStatus(TicketStatus status);
 

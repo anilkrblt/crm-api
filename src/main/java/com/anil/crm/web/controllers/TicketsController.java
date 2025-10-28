@@ -26,7 +26,6 @@ import java.util.List;
 @RequestMapping("/api/tickets")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
-
 public class TicketsController {
 
     private final TicketService ticketService;
@@ -38,7 +37,6 @@ public class TicketsController {
             @ApiResponse(responseCode = "403", description = "Yetkisiz erişim", content = @Content)
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'CUSTOMER')")
     public ResponseEntity<TicketDto> getTicketById(
             @Parameter(description = "Aranan biletin ID'si")
             @PathVariable Long id) {
@@ -51,32 +49,39 @@ public class TicketsController {
             @ApiResponse(responseCode = "403", description = "Yetkisiz erişim", content = @Content)
     })
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
     public ResponseEntity<List<TicketDto>> getAllTickets() {
         return ResponseEntity.ok(ticketService.getAllTickets());
     }
 
     @Operation(summary = "Bir müşteriye ait biletleri getir (Sadece Admin/Ajan)")
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
     public ResponseEntity<List<TicketDto>> getTicketsByCustomer(
             @Parameter(description = "Müşteri ID'si")
             @PathVariable Long customerId) {
         return ResponseEntity.ok(ticketService.getTicketsByCustomerId(customerId));
     }
 
-    @Operation(summary = "Bir ajana (çalışana) ait biletleri getir (Sadece Admin/Ajan)")
-    @GetMapping("/agent/{agentId}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
-    public ResponseEntity<List<TicketDto>> getTicketsByAgent(
-            @Parameter(description = "Ajan (çalışan) ID'si")
-            @PathVariable Long agentId) {
-        return ResponseEntity.ok(ticketService.getTicketsByAgentId(agentId));
+    @Operation(summary = "Bir ajana atanmış biletleri getir (Sadece Admin/Ajan)",
+            description = "Belirli bir ajana atanmış (assigned) biletleri listeler.")
+    @GetMapping("/assigned-agent/{agentId}")
+    public ResponseEntity<List<TicketDto>> getTicketsByAssignedAgent(
+                                                                      @Parameter(description = "Atanmış ajanın ID'si")
+                                                                      @PathVariable Long agentId) {
+        return ResponseEntity.ok(ticketService.getTicketsByAssignedAgentId(agentId));
     }
+
+
+    @Operation(summary = "Bir departmana ait biletleri getir (Sadece Admin/Ajan)", description = "Belirli bir departmana ait tüm biletleri listeler.")
+    @GetMapping("/department/{departmentId}")
+    public ResponseEntity<List<TicketDto>> getTicketsByDepartment(
+            @Parameter(description = "Departman ID'si")
+            @PathVariable Long departmentId) {
+        return ResponseEntity.ok(ticketService.getTicketsByDepartmentId(departmentId));
+    }
+
 
     @Operation(summary = "Duruma (status) göre biletleri getir (Sadece Admin/Ajan)")
     @GetMapping("/status")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
     public ResponseEntity<List<TicketDto>> getTicketsByStatus(
             @Parameter(description = "Durum (örn: OPEN, CLOSED)")
             @RequestParam TicketStatus status) {
@@ -85,7 +90,6 @@ public class TicketsController {
 
     @Operation(summary = "Önceliğe (priority) göre biletleri getir (Sadece Admin/Ajan)")
     @GetMapping("/priority")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
     public ResponseEntity<List<TicketDto>> getTicketsByPriority(
             @Parameter(description = "Öncelik (örn: HIGH, LOW)")
             @RequestParam TicketPriority priority) {
@@ -99,9 +103,8 @@ public class TicketsController {
             @ApiResponse(responseCode = "403", description = "Sadece müşteriler bilet oluşturabilir", content = @Content)
     })
     @PostMapping
-    @PreAuthorize("hasAuthority('CUSTOMER')")
     public ResponseEntity<TicketDto> createTicket(
-            @Parameter(description = "Oluşturulacak bilet verisi")
+            @Parameter(description = "Oluşturulacak bilet verisi (customer.id ve department.id/name zorunlu)")
             @Valid @RequestBody TicketDto ticketDto) {
 
         TicketDto createdTicket = ticketService.createTicket(ticketDto);
@@ -115,7 +118,9 @@ public class TicketsController {
         return ResponseEntity.created(location).body(createdTicket);
     }
 
-    @Operation(summary = "Mevcut bir bileti güncelle (Sadece Admin/Ajan)")
+    @Operation(summary = "Mevcut bir bileti güncelle (Sadece Admin/Ajan)",
+            description = "Biletin konu, açıklama, durum, öncelik gibi temel bilgilerini günceller. " +
+                    "Departman veya atanan ajan değişikliği genellikle ayrı endpoint'lerle yapılır.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Bilet başarıyla güncellendi"),
             @ApiResponse(responseCode = "400", description = "Geçersiz bilet verisi", content = @Content),
@@ -123,11 +128,10 @@ public class TicketsController {
             @ApiResponse(responseCode = "403", description = "Yetkisiz erişim", content = @Content)
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
     public ResponseEntity<TicketDto> updateTicket(
             @Parameter(description = "Güncellenecek biletin ID'si")
             @PathVariable Long id,
-            @Parameter(description = "Güncel bilet verisi")
+            @Parameter(description = "Güncel bilet verisi (departman/ajan güncellenmez)")
             @Valid @RequestBody TicketDto ticketDto) {
 
         TicketDto updatedTicket = ticketService.updateTicket(id, ticketDto);
@@ -141,7 +145,6 @@ public class TicketsController {
             @ApiResponse(responseCode = "403", description = "Yetkisiz erişim", content = @Content)
     })
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
     public ResponseEntity<TicketDto> updateTicketStatus(
             @Parameter(description = "Bilet ID'si")
             @PathVariable Long id,
@@ -151,6 +154,9 @@ public class TicketsController {
         return ResponseEntity.ok(ticketService.updateTicketStatus(id, status));
     }
 
+    // TODO: Biletin departmanını değiştirmek için ayrı bir PATCH endpoint'i eklenebilir.
+    // TODO: Bilete ajan atamak/kaldırmak için ayrı bir PATCH endpoint'i eklenebilir.
+
     @Operation(summary = "Bir bileti ID ile sil (Sadece Admin/Ajan)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Bilet başarıyla silindi", content = @Content),
@@ -158,7 +164,6 @@ public class TicketsController {
             @ApiResponse(responseCode = "403", description = "Yetkisiz erişim", content = @Content)
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
     public ResponseEntity<Void> deleteTicket(
             @Parameter(description = "Silinecek biletin ID'si")
             @PathVariable Long id) {

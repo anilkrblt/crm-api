@@ -18,36 +18,39 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity // Bu kalabilir, zararı yok
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
-    private final UserDetailsService userDetailsService;
+    private final JwtAuthFilter jwtAuthFilter; // Bu bean'ler kalabilir
+    private final UserDetailsService userDetailsService; // Bu bean'ler kalabilir
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.disable()) // CSRF kapalı kalsın
 
-                .csrf(csrf -> csrf.disable())
+                // ----> DEĞİŞİKLİK BURADA <----
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/redoc.html"
-                        ).permitAll()
-                        .anyRequest().authenticated())
+                        // Eski requestMatchers'ları silip yerine bunu yazın:
+                        .requestMatchers("/**").permitAll() // TÜM yollara izin ver
+                )
+                // ----> DEĞİŞİKLİK BİTTİ <----
+
+                // Session yönetimi kapalı kalsın
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Bu bean'ler tanımlı kalabilir, kullanılmasalar bile sorun olmaz
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // --- BU BEAN'LER OLDUĞU GİBİ KALABİLİR ---
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

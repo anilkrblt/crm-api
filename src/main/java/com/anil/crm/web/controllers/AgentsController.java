@@ -4,11 +4,14 @@ import com.anil.crm.services.AgentService;
 import com.anil.crm.web.models.AgentDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -20,40 +23,44 @@ import java.util.List;
 @RequestMapping("/api/agents")
 @RequiredArgsConstructor
 @Tag(name = "Agents", description = "Ajan (çalışan) kayıt ve profil işlemleri")
-@PreAuthorize("hasAuthority('ADMIN')")
 public class AgentsController {
 
     private final AgentService agentService;
 
-    @GetMapping("/{id}")
     @Operation(summary = "Bir ajanı ID ile getir")
-    public ResponseEntity<AgentDto> getAgentById(
-            @Parameter(description = "Ajan ID'si") @PathVariable Long id) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Ajan başarıyla bulundu",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AgentDto.class))),
+            @ApiResponse(responseCode = "404", description = "Belirtilen ID ile ajan bulunamadı", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Bu kaynağa erişim yetkiniz yok", content = @Content)
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<AgentDto> getAgentById(@Parameter(description = "Ajan ID'si") @PathVariable Long id) {
 
         return ResponseEntity.ok(agentService.getAgentById(id));
     }
 
+
+
     @GetMapping
-    @Operation(summary = "Tüm ajanları listele")
-    public ResponseEntity<List<AgentDto>> getAllAgents() {
-        return ResponseEntity.ok(agentService.getAllAgents());
+    @Operation(summary = "Ajanları listele veya filtrele",
+            description = "Sistemdeki ajanları listeler. Opsiyonel olarak 'name' (ad/soyad içerir) veya 'department' (tam departman adı) " +
+                    "query parametreleri ile filtreleme yapılabilir. Her iki parametre de verilirse, belirtilen departmandaki isimle eşleşenler getirilir.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Ajanlar başarıyla listelendi/filtrelendi"),
+            @ApiResponse(responseCode = "403", description = "Yetkisiz erişim", content = @Content)
+    })
+    public ResponseEntity<List<AgentDto>> findAgents(
+            @Parameter(description = "Filtrelemek için ad veya soyad parçası (opsiyonel)")
+            @RequestParam(required = false) String name,
+            @Parameter(description = "Filtrelemek için tam departman adı (opsiyonel)")
+            @RequestParam(required = false) String department
+    ) {
+        List<AgentDto> agents = agentService.findAgents(name, department);
+        return ResponseEntity.ok(agents);
     }
 
-    @GetMapping("/search")
-    @Operation(summary = "Ajanları isme göre ara")
-    public ResponseEntity<List<AgentDto>> searchAgentsByName(
-            @Parameter(description = "Aranacak isim veya soyisim") @RequestParam String name) {
 
-        return ResponseEntity.ok(agentService.getAgentsByUserName(name));
-    }
-
-    @GetMapping("/department/{department}")
-    @Operation(summary = "Departmana göre ajanları getir")
-    public ResponseEntity<List<AgentDto>> getAgentsByDepartment(
-            @Parameter(description = "Departman adı") @PathVariable String department) {
-
-        return ResponseEntity.ok(agentService.getAgentsByDepartment(department));
-    }
 
     @PostMapping
     @Operation(summary = "Yeni bir ajan kaydı oluştur (Registration)")
@@ -71,6 +78,7 @@ public class AgentsController {
         return ResponseEntity.created(location).body(savedAgent);
     }
 
+
     @PutMapping("/{id}")
     @Operation(summary = "Mevcut bir ajanı güncelle")
     public ResponseEntity<AgentDto> updateAgent(
@@ -83,8 +91,7 @@ public class AgentsController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Bir ajanı sil")
-    public ResponseEntity<Void> deleteAgent(
-            @Parameter(description = "Silinecek ajan ID'si") @PathVariable Long id) {
+    public ResponseEntity<Void> deleteAgent(@Parameter(description = "Silinecek ajan ID'si") @PathVariable Long id) {
 
         agentService.deleteAgentById(id);
         return ResponseEntity.noContent().build();

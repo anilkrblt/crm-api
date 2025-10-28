@@ -44,7 +44,6 @@ public class TicketCommentsController {
             @ApiResponse(responseCode = "403", description = "Bu kaynağa erişim yetkiniz yok", content = @Content)
     })
     @GetMapping("/ticket/{ticketId}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'CUSTOMER')")
     public ResponseEntity<List<TicketCommentDto>> getCommentsByTicket(
             @Parameter(description = "Yorumları listelenecek biletin ID'si")
             @PathVariable Long ticketId) {
@@ -59,7 +58,6 @@ public class TicketCommentsController {
             @ApiResponse(responseCode = "403", description = "Bu kaynağa erişim yetkiniz yok", content = @Content)
     })
     @GetMapping("/author/{authorId}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AGENT')")
     public ResponseEntity<List<TicketCommentDto>> getCommentsByAuthor(
             @Parameter(description = "Yorumları listelenecek yazarın (User) ID'si")
             @PathVariable Long authorId) {
@@ -77,7 +75,6 @@ public class TicketCommentsController {
             @ApiResponse(responseCode = "403", description = "Bu kaynağa erişim yetkiniz yok", content = @Content)
     })
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'AGENT')")
     public ResponseEntity<TicketCommentDto> addComment(
             @Parameter(description = "Eklenecek yorumun verisi (ticketId ve comment metni)")
             @Valid @RequestBody TicketCommentDto commentDto,
@@ -104,7 +101,7 @@ public class TicketCommentsController {
             @ApiResponse(responseCode = "403", description = "Bu kaynağa erişim yetkiniz yok", content = @Content)
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+//    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<TicketCommentDto> updateComment(
             @Parameter(description = "Güncellenecek yorumun ID'si")
             @PathVariable Long id,
@@ -122,7 +119,7 @@ public class TicketCommentsController {
             @ApiResponse(responseCode = "403", description = "Bu kaynağa erişim yetkiniz yok", content = @Content)
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+//    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
         ticketCommentService.deleteCommentById(id);
         return ResponseEntity.noContent().build();

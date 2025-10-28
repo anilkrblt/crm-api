@@ -11,16 +11,16 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class AgentDto {
 
-    private Long id; // Agent.id
+    private Long id;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 
     @NotBlank(message = "İsim alanı boş olamaz")
     private String firstName;
@@ -32,9 +32,8 @@ public class AgentDto {
     @NotBlank(message = "Email boş olamaz")
     private String email;
 
-    @NotBlank(message = "Departman alanı boş olamaz")
-    private String department;
-
+    @NotBlank(message = "Departman adı boş olamaz", groups = CreateValidation.class)
+    private String departmentName;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank(message = "Şifre boş olamaz", groups = CreateValidation.class)

@@ -13,19 +13,12 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-
-                registry.addMapping("/api/**")
-                        .allowedOrigins("*")
-                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
+                registry.addMapping("/**")
+                        .allowedOriginPatterns("*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowCredentials(true);
-
-                // API Dokümantasyon yollarına izin ver
-                registry.addMapping("/v3/api-docs/**")
-                        .allowedOrigins("https://anil.github.io")
-                        .allowedMethods("GET")
-                        .allowedHeaders("*");
             }
         };
     }
+
 }

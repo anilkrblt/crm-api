@@ -1,11 +1,13 @@
 package com.anil.crm.services;
 
 import com.anil.crm.domain.Agent;
+import com.anil.crm.domain.Department;
 import com.anil.crm.domain.Role;
 import com.anil.crm.domain.User;
 import com.anil.crm.exceptions.EmailAlreadyExistsException;
 import com.anil.crm.exceptions.ResourceNotFoundException;
 import com.anil.crm.repositories.AgentRepository;
+import com.anil.crm.repositories.DepartmentRepository;
 import com.anil.crm.repositories.UserRepository;
 import com.anil.crm.web.mappers.AgentMapper;
 import com.anil.crm.web.models.AgentDto;
@@ -16,7 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,19 +28,12 @@ public class AgentServiceImpl implements AgentService {
     private static final Logger log = LoggerFactory.getLogger(AgentServiceImpl.class);
 
     private final AgentRepository agentRepository;
+    private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AgentMapper agentMapper;
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<AgentDto> getAllAgents() {
-        log.debug("Fetching all agents");
-        return agentRepository.findAll()
-                .stream()
-                .map(agentMapper::agentToAgentDto)
-                .collect(Collectors.toList());
-    }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -52,32 +46,34 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     @Transactional(readOnly = true)
-    public AgentDto getAgentByEmail(String email) {
-        log.debug("Fetching agent by email: {}", email);
-        return agentRepository.findAgentByUserEmail(email)
-                .map(agentMapper::agentToAgentDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Agent not found with email: " + email));
-    }
+    public List<AgentDto> findAgents(String name, String departmentName) {
+        log.debug("Finding agents with name like '{}' and department like '{}'", name, departmentName);
+        List<Agent> agents;
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<AgentDto> getAgentsByUserName(String name) {
-        log.debug("Searching agents by name: {}", name);
-        return agentRepository.findAgentsByUserFirstNameContainingOrUserLastNameContaining(name, name)
-                .stream()
+        boolean hasNameFilter = name != null && !name.trim().isEmpty();
+        boolean hasDepartmentFilter = departmentName != null && !departmentName.trim().isEmpty();
+
+        if (hasNameFilter && hasDepartmentFilter) {
+            log.debug("Filtering by both department name containing and user name containing");
+            agents = agentRepository.findByDepartmentNameContainingAndUserNameContaining(departmentName, name);
+        } else if (hasNameFilter) {
+            log.debug("Filtering by user name containing only");
+            agents = agentRepository.findAgentsByUserFirstNameContainingOrUserLastNameContaining(name, name);
+        } else if (hasDepartmentFilter) {
+            log.debug("Filtering by department name containing only");
+            agents = agentRepository.findAgentsByDepartmentNameContainingIgnoreCase(departmentName);
+        } else {
+            log.debug("No filters applied, fetching all agents");
+            agents = agentRepository.findAll();
+        }
+
+        return agents.stream()
                 .map(agentMapper::agentToAgentDto)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<AgentDto> getAgentsByDepartment(String department) {
-        log.debug("Fetching agents by department: {}", department);
-        return agentRepository.findAgentsByDepartment(department)
-                .stream()
-                .map(agentMapper::agentToAgentDto)
-                .collect(Collectors.toList());
-    }
+
+
 
     @Override
     @Transactional
@@ -89,6 +85,12 @@ public class AgentServiceImpl implements AgentService {
             throw new EmailAlreadyExistsException("Email already in use: " + agentDto.getEmail());
         }
 
+        Department department = departmentRepository.findByName(agentDto.getDepartmentName())
+                .orElseThrow(() -> {
+                    log.warn("Create agent failed. Department not found with name: {}", agentDto.getDepartmentName());
+                    return new ResourceNotFoundException("Department not found with name: " + agentDto.getDepartmentName());
+                });
+
         User user = User.builder()
                 .firstName(agentDto.getFirstName())
                 .lastName(agentDto.getLastName())
@@ -98,9 +100,7 @@ public class AgentServiceImpl implements AgentService {
                 .build();
 
         Agent agent = Agent.builder()
-                .department(agentDto.getDepartment())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .department(department)
                 .user(user)
                 .build();
 
@@ -109,6 +109,8 @@ public class AgentServiceImpl implements AgentService {
 
         return agentMapper.agentToAgentDto(savedAgent);
     }
+
+
 
     @Override
     @Transactional
@@ -120,8 +122,22 @@ public class AgentServiceImpl implements AgentService {
 
         User existingUser = existingAgent.getUser();
 
-        existingAgent.setDepartment(agentDto.getDepartment());
-        existingAgent.setUpdatedAt(LocalDateTime.now());
+        if (agentDto.getDepartmentName() != null &&
+                !agentDto.getDepartmentName().equalsIgnoreCase(existingAgent.getDepartment().getName())) {
+
+            log.debug("Department change requested for agent {}: from '{}' to '{}'",
+                    id, existingAgent.getDepartment().getName(), agentDto.getDepartmentName());
+
+            Department newDepartment = departmentRepository.findByName(agentDto.getDepartmentName())
+                    .orElseThrow(() -> {
+                        log.warn("Update failed. Department not found with name: {}", agentDto.getDepartmentName());
+                        return new ResourceNotFoundException("Department not found with name: " + agentDto.getDepartmentName());
+                    });
+
+            existingAgent.setDepartment(newDepartment);
+            log.info("Agent {} department updated to {}", id, newDepartment.getName());
+        }
+
         existingUser.setFirstName(agentDto.getFirstName());
         existingUser.setLastName(agentDto.getLastName());
 
@@ -139,6 +155,7 @@ public class AgentServiceImpl implements AgentService {
         }
 
         Agent updatedAgent = agentRepository.save(existingAgent);
+        log.info("Agent profile updated successfully for id: {}", id);
 
         return agentMapper.agentToAgentDto(updatedAgent);
     }
@@ -153,4 +170,6 @@ public class AgentServiceImpl implements AgentService {
         }
         agentRepository.deleteById(id);
     }
+
+
 }

@@ -111,6 +111,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerDto updateCustomer(Long id, CustomerDto customerDto) {
         log.info("Updating customer with id: {}", id);
 
+
         Customer existingCustomer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + id));
 

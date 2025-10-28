@@ -37,8 +37,7 @@ public class AuthController {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
-                        request.getPassword()
-                )
+                        request.getPassword())
         );
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());

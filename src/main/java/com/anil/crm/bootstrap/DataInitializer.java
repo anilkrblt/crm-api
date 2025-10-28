@@ -4,6 +4,7 @@ package com.anil.crm.bootstrap;
 import com.anil.crm.domain.*;
 import com.anil.crm.repositories.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -12,8 +13,11 @@ import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DataInitializer implements CommandLineRunner {
 
+
+    private final DepartmentRepository departmentRepository;
     private final CustomerRepository customerRepository;
     private final TicketCommentRepository ticketCommentRepository;
     private final TicketRepository ticketRepository;
@@ -23,12 +27,27 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        log.info(">>>> DataInitializer RUN method started <<<<");
         ticketCommentRepository.deleteAll();
         ticketRepository.deleteAll();
         customerRepository.deleteAll();
         agentRepository.deleteAll();
         userRepository.deleteAll();
+        departmentRepository.deleteAll();
 
+        Department techSupport = Department.builder()
+                .name("Teknik Destek") // Departman adı (PK ve unique olmalı)
+                .description("Ürünler ve hizmetlerle ilgili teknik sorunlara yardımcı olan departman.") // Opsiyonel açıklama
+                .build();
+
+        Department customerSupport = Department.builder()
+                .name("Müşteri Hizmetleri") // Başka bir departman adı
+                .description("Genel sorular, hesap yönetimi ve şikayetlerle ilgilenen departman.")
+                .build();
+
+
+        departmentRepository.save(techSupport);
+        departmentRepository.save(customerSupport);
 
 
         User agentUser1 = User.builder()
@@ -41,7 +60,7 @@ public class DataInitializer implements CommandLineRunner {
 
 
         Agent agent1 = Agent.builder()
-                .department("Teknik Destek")
+                .department(techSupport)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .user(agentUser1)
@@ -59,7 +78,7 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
 
         Agent agent2 = Agent.builder()
-                .department("Müşteri Hizmetleri")
+                .department(customerSupport)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .user(agentUser2)
@@ -105,10 +124,9 @@ public class DataInitializer implements CommandLineRunner {
         customerRepository.save(customer2);
 
 
-
         Ticket ticket1 = Ticket.builder()
                 .customer(customer1)
-                .agent(agent1)
+                .department(customerSupport)
                 .subject("Ürün iade talebi")
                 .description("Satın aldığım ürünü iade etmek istiyorum")
                 .status(TicketStatus.OPEN)
@@ -119,7 +137,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Ticket ticket2 = Ticket.builder()
                 .customer(customer2)
-                .agent(agent2)
+                .department(techSupport)
                 .subject("Teknik sorun")
                 .description("Uygulama açılmıyor, hata veriyor")
                 .status(TicketStatus.IN_PROGRESS)
