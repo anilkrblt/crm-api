@@ -5,9 +5,11 @@ import com.anil.crm.domain.Department;
 import com.anil.crm.domain.Role;
 import com.anil.crm.domain.User;
 import com.anil.crm.exceptions.EmailAlreadyExistsException;
+import com.anil.crm.exceptions.ResourceInUseException;
 import com.anil.crm.exceptions.ResourceNotFoundException;
 import com.anil.crm.repositories.AgentRepository;
 import com.anil.crm.repositories.DepartmentRepository;
+import com.anil.crm.repositories.TicketRepository;
 import com.anil.crm.repositories.UserRepository;
 import com.anil.crm.web.mappers.AgentMapper;
 import com.anil.crm.web.models.AgentDto;
@@ -32,7 +34,7 @@ public class AgentServiceImpl implements AgentService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AgentMapper agentMapper;
-
+    private final TicketRepository ticketRepository;
 
 
     @Override
@@ -71,8 +73,6 @@ public class AgentServiceImpl implements AgentService {
                 .map(agentMapper::agentToAgentDto)
                 .collect(Collectors.toList());
     }
-
-
 
 
     @Override
@@ -163,13 +163,19 @@ public class AgentServiceImpl implements AgentService {
     @Override
     @Transactional
     public void deleteAgentById(Long id) {
-        log.info("Deleting agent with id: {}", id);
+        log.info("Attempting to delete agent with id: {}", id);
+
         if (!agentRepository.existsById(id)) {
             log.warn("Failed to delete. Agent not found with id: {}", id);
             throw new ResourceNotFoundException("Agent not found with id: " + id);
         }
+
+        if (ticketRepository.existsByAssignedAgentId(id)) {
+            log.warn("Failed to delete agent {}. Agent has associated tickets.", id);
+            throw new ResourceInUseException("Cannot delete agent. Agents are still assigned to it.");
+        }
+
         agentRepository.deleteById(id);
+        log.info("Agent deleted successfully with id: {}", id);
     }
-
-
 }

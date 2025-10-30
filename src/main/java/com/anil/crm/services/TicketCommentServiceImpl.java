@@ -5,7 +5,7 @@ import com.anil.crm.domain.TicketComment;
 import com.anil.crm.domain.User;
 import com.anil.crm.exceptions.ResourceNotFoundException;
 import com.anil.crm.repositories.TicketCommentRepository;
-import com.anil.crm.repositories.TicketRepository; // 1. YENİ BAĞIMLILIK (Ticket'ı bulmak için)
+import com.anil.crm.repositories.TicketRepository;
 import com.anil.crm.web.mappers.TicketCommentMapper;
 import com.anil.crm.web.models.TicketCommentDto;
 import lombok.RequiredArgsConstructor;

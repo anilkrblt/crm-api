@@ -36,12 +36,12 @@ public class DataInitializer implements CommandLineRunner {
         departmentRepository.deleteAll();
 
         Department techSupport = Department.builder()
-                .name("Teknik Destek") // Departman adı (PK ve unique olmalı)
+                .name("Teknik Destek")
                 .description("Ürünler ve hizmetlerle ilgili teknik sorunlara yardımcı olan departman.") // Opsiyonel açıklama
                 .build();
 
         Department customerSupport = Department.builder()
-                .name("Müşteri Hizmetleri") // Başka bir departman adı
+                .name("Müşteri Hizmetleri")
                 .description("Genel sorular, hesap yönetimi ve şikayetlerle ilgilenen departman.")
                 .build();
 
@@ -92,7 +92,7 @@ public class DataInitializer implements CommandLineRunner {
                 .lastName("Veli")
                 .email("ali.veli@email.com")
                 .password(passwordEncoder.encode("123456"))
-                .role(Role.CUSTOMER) // Rolü CUSTOMER
+                .role(Role.CUSTOMER)
                 .build();
 
 

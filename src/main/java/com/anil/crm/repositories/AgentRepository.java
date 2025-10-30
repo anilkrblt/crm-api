@@ -22,6 +22,7 @@ public interface AgentRepository extends JpaRepository<Agent, Long> {
 
 
     List<Agent> findAgentsByDepartmentName(String departmentName);
+
     boolean existsByDepartmentId(Long id);
 
     @Query("SELECT a FROM Agent a " +
@@ -29,8 +30,8 @@ public interface AgentRepository extends JpaRepository<Agent, Long> {
             "AND (LOWER(a.user.firstName) LIKE LOWER(CONCAT('%', :name, '%')) " +
             "OR LOWER(a.user.lastName) LIKE LOWER(CONCAT('%', :name, '%')))")
     List<Agent> findByDepartmentNameContainingAndUserNameContaining(
-                                                                     @Param("departmentName") String departmentName,
-                                                                     @Param("name") String name);
+            @Param("departmentName") String departmentName,
+            @Param("name") String name);
 
     List<Agent> findAgentsByDepartmentNameContainingIgnoreCase(String departmentName);
 }

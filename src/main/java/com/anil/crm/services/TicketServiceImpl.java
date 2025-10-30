@@ -205,9 +205,6 @@ public class TicketServiceImpl implements TicketService {
             throw new ResourceNotFoundException("Ticket not found with id: " + id);
         }
 
-        // TODO: Silmeden önce ilişkili TicketComment'ları ne yapacağına karar ver.
-
-
         ticketRepository.deleteById(id);
         log.info("Ticket deleted successfully with id: {}", id);
     }

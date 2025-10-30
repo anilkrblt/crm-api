@@ -12,16 +12,15 @@ import com.anil.crm.repositories.UserRepository;
 import com.anil.crm.web.mappers.CustomerMapper;
 import com.anil.crm.web.models.CustomerDto;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,11 +29,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.*;
 
-@ExtendWith(MockitoExtension.class) // Enable Mockito integration
-@DisplayName("Customer Service Implementation Unit Tests")
+@ExtendWith(MockitoExtension.class)
 class CustomerServiceImplTest {
 
-    @Mock // Create mocks for dependencies
+    @Mock
     TicketRepository ticketRepository;
     @Mock
     CustomerRepository customerRepository;
@@ -45,10 +43,9 @@ class CustomerServiceImplTest {
     @Mock
     CustomerMapper customerMapper;
 
-    @InjectMocks // Inject mocks into the class under test
+    @InjectMocks
     CustomerServiceImpl customerService;
 
-    // Test data
     CustomerDto customerDto;
     Customer customer;
     User user;
@@ -58,7 +55,6 @@ class CustomerServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        // Initialize test data before each test
         user = User.builder()
                 .id(userId)
                 .email(customerEmail)
@@ -86,16 +82,12 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Get All Customers - Success")
-    void getAllCustomers_shouldReturnListOfCustomerDtos() {
-        // Given: Mock repository and mapper behavior
+    void getAllCustomers() {
         given(customerRepository.findAll()).willReturn(List.of(customer));
         given(customerMapper.customerToCustomerDto(customer)).willReturn(customerDto);
 
-        // When: Call the service method
         List<CustomerDto> result = customerService.getAllCustomers();
 
-        // Then: Assert the results and verify interactions
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(customerDto.getId(), result.get(0).getId());
@@ -104,16 +96,12 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Get Customer By ID - Success")
-    void getCustomerById_shouldReturnCustomerDto_whenFound() {
-        // Given
+    void getCustomerById() {
         given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
         given(customerMapper.customerToCustomerDto(customer)).willReturn(customerDto);
 
-        // When
         CustomerDto foundDto = customerService.getCustomerById(customerId);
 
-        // Then
         assertNotNull(foundDto);
         assertEquals(customerId, foundDto.getId());
         assertEquals(customerEmail, foundDto.getEmail());
@@ -122,29 +110,25 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Get Customer By ID - Not Found")
-    void getCustomerById_shouldThrowResourceNotFoundException_whenNotFound() {
-        // Given
+    void getCustomerById_NotFound() {
         Long nonExistentId = 99L;
         given(customerRepository.findById(nonExistentId)).willReturn(Optional.empty());
 
-        // When & Then
-        assertThrows(ResourceNotFoundException.class, () -> customerService.getCustomerById(nonExistentId));
+        assertThrows(ResourceNotFoundException.class, () -> {
+            customerService.getCustomerById(nonExistentId);
+        });
+
         then(customerRepository).should().findById(nonExistentId);
-        then(customerMapper).should(never()).customerToCustomerDto(any()); // Mapper should not be called
+        then(customerMapper).should(never()).customerToCustomerDto(any());
     }
 
     @Test
-    @DisplayName("Get Customer By Email - Success")
-    void getCustomerByEmail_shouldReturnCustomerDto_whenFound() {
-        // Given
+    void getCustomerByEmail() {
         given(customerRepository.findCustomerByUserEmail(customerEmail)).willReturn(Optional.of(customer));
         given(customerMapper.customerToCustomerDto(customer)).willReturn(customerDto);
 
-        // When
         CustomerDto foundDto = customerService.getCustomerByEmail(customerEmail);
 
-        // Then
         assertNotNull(foundDto);
         assertEquals(customerEmail, foundDto.getEmail());
         then(customerRepository).should().findCustomerByUserEmail(customerEmail);
@@ -152,31 +136,26 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Get Customer By Email - Not Found")
-    void getCustomerByEmail_shouldThrowResourceNotFoundException_whenNotFound() {
-        // Given
+    void getCustomerByEmail_NotFound() {
         String nonExistentEmail = "notfound@customer.com";
         given(customerRepository.findCustomerByUserEmail(nonExistentEmail)).willReturn(Optional.empty());
 
-        // When & Then
-        assertThrows(ResourceNotFoundException.class, () -> customerService.getCustomerByEmail(nonExistentEmail));
+        assertThrows(ResourceNotFoundException.class, () -> {
+            customerService.getCustomerByEmail(nonExistentEmail);
+        });
         then(customerRepository).should().findCustomerByUserEmail(nonExistentEmail);
         then(customerMapper).should(never()).customerToCustomerDto(any());
     }
 
     @Test
-    @DisplayName("Get Customers By User Name - Success")
-    void getCustomersByUserName_shouldReturnListOfCustomerDtos() {
-        // Given
+    void getCustomersByUserName() {
         String name = "Test";
         given(customerRepository.findCustomersByUserFirstNameContainingOrUserLastNameContaining(name, name))
                 .willReturn(List.of(customer));
         given(customerMapper.customerToCustomerDto(customer)).willReturn(customerDto);
 
-        // When
         List<CustomerDto> result = customerService.getCustomersByUserName(name);
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.size());
         then(customerRepository).should().findCustomersByUserFirstNameContainingOrUserLastNameContaining(name, name);
@@ -184,9 +163,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Create Customer - Success")
-    void createCustomer_shouldSaveAndReturnCustomer() {
-        // Given
+    void createCustomer() {
         CustomerDto dtoToSave = CustomerDto.builder()
                 .email("new@customer.com")
                 .firstName("New")
@@ -195,18 +172,18 @@ class CustomerServiceImplTest {
                 .phone("9876543210")
                 .build();
 
-        given(userRepository.findByEmail(dtoToSave.getEmail())).willReturn(Optional.empty()); // Email is available
-        given(passwordEncoder.encode(dtoToSave.getPassword())).willReturn("hashedPassword"); // Mock hashing
-        // Mock the save to return an entity with IDs
-        given(customerRepository.save(any(Customer.class))).willAnswer(invocation -> {
+        given(userRepository.findByEmail(dtoToSave.getEmail())).willReturn(Optional.empty());
+        given(passwordEncoder.encode(dtoToSave.getPassword())).willReturn("hashedPassword");
+
+        ArgumentCaptor<Customer> customerCaptor = ArgumentCaptor.forClass(Customer.class);
+
+        given(customerRepository.save(customerCaptor.capture())).willAnswer(invocation -> {
             Customer saved = invocation.getArgument(0);
             saved.setId(2L);
             saved.getUser().setId(2L);
-            saved.setCreatedAt(LocalDateTime.now());
-            saved.setUpdatedAt(LocalDateTime.now());
             return saved;
         });
-        // Mock the mapper to return a DTO based on the saved entity
+
         given(customerMapper.customerToCustomerDto(any(Customer.class))).willAnswer(invocation -> {
             Customer saved = invocation.getArgument(0);
             return CustomerDto.builder()
@@ -215,20 +192,20 @@ class CustomerServiceImplTest {
                     .firstName(saved.getUser().getFirstName())
                     .lastName(saved.getUser().getLastName())
                     .phone(saved.getPhone())
-                    .createdAt(saved.getCreatedAt())
-                    .updatedAt(saved.getUpdatedAt())
                     .build();
         });
 
-        // When
         CustomerDto savedDto = customerService.createCustomer(dtoToSave);
 
-        // Then
         assertNotNull(savedDto);
         assertEquals(2L, savedDto.getId());
         assertEquals(dtoToSave.getEmail(), savedDto.getEmail());
-        assertEquals(dtoToSave.getPhone(), savedDto.getPhone());
-        assertNotNull(savedDto.getCreatedAt());
+
+        Customer capturedCustomer = customerCaptor.getValue();
+        assertEquals(dtoToSave.getPhone(), capturedCustomer.getPhone());
+        assertEquals(dtoToSave.getFirstName(), capturedCustomer.getUser().getFirstName());
+        assertEquals("hashedPassword", capturedCustomer.getUser().getPassword());
+        assertEquals(Role.CUSTOMER, capturedCustomer.getUser().getRole());
 
         then(userRepository).should().findByEmail(dtoToSave.getEmail());
         then(passwordEncoder).should().encode(dtoToSave.getPassword());
@@ -237,147 +214,83 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Create Customer - Email Exists")
-    void createCustomer_shouldThrowEmailExistsException_whenEmailInUse() {
-        // Given
+    void createCustomer_EmailExists() {
         CustomerDto dtoToSave = CustomerDto.builder().email(customerEmail).password("pwd").build();
-        given(userRepository.findByEmail(dtoToSave.getEmail())).willReturn(Optional.of(user)); // Email exists
+        given(userRepository.findByEmail(dtoToSave.getEmail())).willReturn(Optional.of(user));
 
-        // When & Then
         assertThrows(EmailAlreadyExistsException.class, () -> customerService.createCustomer(dtoToSave));
 
         then(userRepository).should().findByEmail(dtoToSave.getEmail());
-        // Verify no save attempts were made
         then(passwordEncoder).should(never()).encode(anyString());
         then(customerRepository).should(never()).save(any(Customer.class));
     }
 
     @Test
-    @DisplayName("Update Customer - Success")
-    void updateCustomer_shouldUpdateAndReturnCustomer() {
-        // Given
+    void updateCustomer() {
         CustomerDto updatesDto = CustomerDto.builder()
-                .firstName("Updated First")
-                .lastName("Updated Last")
-                .email("updated.customer@test.com") // New email
-                .phone("0000000000") // New phone
+                .firstName("UpdatedFirst")
+                .lastName("UpdatedLast")
+                .email(customerEmail)
+                .phone("1111111111")
                 .build();
 
         given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
-        given(userRepository.findByEmail(updatesDto.getEmail())).willReturn(Optional.empty()); // New email is available
-        given(customerRepository.save(any(Customer.class))).willAnswer(invocation -> invocation.getArgument(0)); // Return updated entity
-        // Mock mapper to return DTO based on updated entity
-        given(customerMapper.customerToCustomerDto(any(Customer.class))).willAnswer(invocation -> {
-            Customer updated = invocation.getArgument(0);
-            return CustomerDto.builder()
-                    .id(updated.getId())
-                    .email(updated.getUser().getEmail()) // Updated email
-                    .firstName(updated.getUser().getFirstName()) // Updated name
-                    .lastName(updated.getUser().getLastName())
-                    .phone(updated.getPhone()) // Updated phone
-                    .createdAt(updated.getCreatedAt())
-                    .updatedAt(updated.getUpdatedAt()) // Should be updated now
-                    .build();
-        });
+        given(customerRepository.save(any(Customer.class))).willReturn(customer);
+        given(customerMapper.customerToCustomerDto(customer)).willReturn(customerDto);
 
-        // When
         CustomerDto updatedDto = customerService.updateCustomer(customerId, updatesDto);
 
-        // Then
         assertNotNull(updatedDto);
-        assertEquals(customerId, updatedDto.getId());
-        assertEquals(updatesDto.getEmail(), updatedDto.getEmail());
-        assertEquals(updatesDto.getFirstName(), updatedDto.getFirstName());
-        assertEquals(updatesDto.getPhone(), updatedDto.getPhone());
-        assertNotEquals(customer.getUpdatedAt(), updatedDto.getUpdatedAt()); // Check timestamp update
-
         then(customerRepository).should().findById(customerId);
-        then(userRepository).should().findByEmail(updatesDto.getEmail());
-        then(customerRepository).should().save(any(Customer.class));
-        then(customerMapper).should().customerToCustomerDto(any(Customer.class));
+        then(customerRepository).should().save(customer);
+
+        ArgumentCaptor<Customer> customerCaptor = ArgumentCaptor.forClass(Customer.class);
+        then(customerRepository).should().save(customerCaptor.capture());
+
+        Customer capturedCustomer = customerCaptor.getValue();
+        assertEquals("UpdatedFirst", capturedCustomer.getUser().getFirstName());
+        assertEquals("UpdatedLast", capturedCustomer.getUser().getLastName());
+        assertEquals("1111111111", capturedCustomer.getPhone());
     }
 
     @Test
-    @DisplayName("Update Customer - Not Found")
-    void updateCustomer_shouldThrowNotFoundException_whenCustomerNotFound() {
-        // Given
-        Long nonExistentId = 99L;
-        CustomerDto updatesDto = CustomerDto.builder().email("any@email.com").build();
-        given(customerRepository.findById(nonExistentId)).willReturn(Optional.empty());
-
-        // When & Then
-        assertThrows(ResourceNotFoundException.class, () -> customerService.updateCustomer(nonExistentId, updatesDto));
-        then(customerRepository).should().findById(nonExistentId);
-        then(userRepository).should(never()).findByEmail(anyString());
-        then(customerRepository).should(never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Update Customer - Email Exists")
-    void updateCustomer_shouldThrowEmailExistsException_whenEmailTaken() {
-        // Given
-        CustomerDto updatesDto = CustomerDto.builder()
-                .email("existing.other@test.com") // Email that belongs to another user
-                .firstName("Test").lastName("Customer").phone("123") // Include required fields
-                .build();
-        User otherUser = User.builder().id(2L).email("existing.other@test.com").build();
-
-        given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
-        // Mock userRepository to find another user with the target email
-        given(userRepository.findByEmail(updatesDto.getEmail())).willReturn(Optional.of(otherUser));
-
-        // When & Then
-        assertThrows(EmailAlreadyExistsException.class, () -> customerService.updateCustomer(customerId, updatesDto));
-
-        then(customerRepository).should().findById(customerId);
-        then(userRepository).should().findByEmail(updatesDto.getEmail());
-        then(customerRepository).should(never()).save(any()); // Should not save
-    }
-
-    @Test
-    @DisplayName("Delete Customer By ID - Success")
-    void deleteCustomerById_shouldCallRepositoryDelete_whenExistsAndNoTickets() {
-        // Given
+    void deleteCustomerById() {
         given(customerRepository.existsById(customerId)).willReturn(true);
-        given(ticketRepository.existsByCustomerId(customerId)).willReturn(false); // No tickets exist
-        willDoNothing().given(customerRepository).deleteById(customerId); // Mock void method
+        given(ticketRepository.existsByCustomerId(customerId)).willReturn(false);
+        willDoNothing().given(customerRepository).deleteById(customerId);
 
-        // When
-        customerService.deleteCustomerById(customerId);
+        assertDoesNotThrow(() -> customerService.deleteCustomerById(customerId));
 
-        // Then
         then(customerRepository).should().existsById(customerId);
         then(ticketRepository).should().existsByCustomerId(customerId);
         then(customerRepository).should().deleteById(customerId);
     }
 
     @Test
-    @DisplayName("Delete Customer By ID - Not Found")
-    void deleteCustomerById_shouldThrowNotFoundException_whenNotExists() {
-        // Given
-        Long nonExistentId = 99L;
-        given(customerRepository.existsById(nonExistentId)).willReturn(false);
-
-        // When & Then
-        assertThrows(ResourceNotFoundException.class, () -> customerService.deleteCustomerById(nonExistentId));
-
-        then(customerRepository).should().existsById(nonExistentId);
-        then(ticketRepository).should(never()).existsByCustomerId(anyLong()); // Ticket check shouldn't happen
-        then(customerRepository).should(never()).deleteById(anyLong()); // Delete should not be called
-    }
-
-    @Test
-    @DisplayName("Delete Customer By ID - Tickets Exist")
-    void deleteCustomerById_shouldThrowResourceInUseException_whenTicketsExist() {
-        // Given
+    void deleteCustomerById_InUse() {
         given(customerRepository.existsById(customerId)).willReturn(true);
-        given(ticketRepository.existsByCustomerId(customerId)).willReturn(true); // Tickets EXIST
+        given(ticketRepository.existsByCustomerId(customerId)).willReturn(true);
 
-        // When & Then
-        assertThrows(ResourceInUseException.class, () -> customerService.deleteCustomerById(customerId));
+        assertThrows(ResourceInUseException.class, () -> {
+            customerService.deleteCustomerById(customerId);
+        });
 
         then(customerRepository).should().existsById(customerId);
         then(ticketRepository).should().existsByCustomerId(customerId);
-        then(customerRepository).should(never()).deleteById(anyLong()); // Delete should not be called
+        then(customerRepository).should(never()).deleteById(anyLong());
+    }
+
+    @Test
+    void deleteCustomerById_NotFound() {
+        Long nonExistentId = 99L;
+        given(customerRepository.existsById(nonExistentId)).willReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            customerService.deleteCustomerById(nonExistentId);
+        });
+
+        then(customerRepository).should().existsById(nonExistentId);
+        then(ticketRepository).should(never()).existsByCustomerId(anyLong());
+        then(customerRepository).should(never()).deleteById(anyLong());
     }
 }

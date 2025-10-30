@@ -154,9 +154,6 @@ public class TicketsController {
         return ResponseEntity.ok(ticketService.updateTicketStatus(id, status));
     }
 
-    // TODO: Biletin departmanını değiştirmek için ayrı bir PATCH endpoint'i eklenebilir.
-    // TODO: Bilete ajan atamak/kaldırmak için ayrı bir PATCH endpoint'i eklenebilir.
-
     @Operation(summary = "Bir bileti ID ile sil (Sadece Admin/Ajan)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Bilet başarıyla silindi", content = @Content),

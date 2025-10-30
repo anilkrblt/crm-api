@@ -1,25 +1,27 @@
 package com.anil.crm.services;
 
 import com.anil.crm.domain.Agent;
+import com.anil.crm.domain.Department;
 import com.anil.crm.domain.Role;
 import com.anil.crm.domain.User;
 import com.anil.crm.exceptions.EmailAlreadyExistsException;
+import com.anil.crm.exceptions.ResourceInUseException;
 import com.anil.crm.exceptions.ResourceNotFoundException;
 import com.anil.crm.repositories.AgentRepository;
+import com.anil.crm.repositories.DepartmentRepository;
+import com.anil.crm.repositories.TicketRepository;
 import com.anil.crm.repositories.UserRepository;
 import com.anil.crm.web.mappers.AgentMapper;
 import com.anil.crm.web.models.AgentDto;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,383 +31,257 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Agent Service Implementation Unit Tests")
 class AgentServiceImplTest {
 
     @Mock
     AgentRepository agentRepository;
-
     @Mock
     UserRepository userRepository;
-
+    @Mock
+    DepartmentRepository departmentRepository;
+    @Mock
+    TicketRepository ticketRepository;
     @Mock
     PasswordEncoder passwordEncoder;
-
     @Mock
     AgentMapper agentMapper;
 
     @InjectMocks
     AgentServiceImpl agentService;
 
-    AgentDto agentDto;
-    Agent agent;
-    User user;
+    Agent agent1;
+    AgentDto agentDto1;
+    User agentUser1;
+    Department techSupport;
+    Long agentId = 1L;
+    String agentEmail = "agent@test.com";
 
     @BeforeEach
     void setUp() {
-        user = User.builder()
+        techSupport = Department.builder().id(1L).name("Teknik Destek").build();
+
+        agentUser1 = User.builder()
                 .id(1L)
-                .email("agent@test.com")
+                .email(agentEmail)
                 .firstName("Test")
                 .lastName("Agent")
                 .role(Role.AGENT)
                 .password("hashedPassword")
                 .build();
-        agent = Agent.builder()
-                .id(1L)
-                .department("Support")
-                .user(user)
-                .createdAt(LocalDateTime.now().minusDays(1))
-                .updatedAt(LocalDateTime.now().minusDays(1))
+
+        agent1 = Agent.builder()
+                .id(agentId)
+                .department(techSupport)
+                .user(agentUser1)
                 .build();
-        agentDto = AgentDto.builder()
-                .id(1L)
-                .email("agent@test.com")
+
+        agentDto1 = AgentDto.builder()
+                .id(agentId)
+                .email(agentEmail)
                 .firstName("Test")
                 .lastName("Agent")
-                .department("Support")
-                .createdAt(agent.getCreatedAt())
-                .updatedAt(agent.getUpdatedAt())
+                .departmentName("Teknik Destek")
                 .build();
     }
 
     @Test
-    @DisplayName("Get All Agents - Success")
-    void getAllAgents_shouldReturnListOfAgentDtos() {
-        // Given
-        given(agentRepository.findAll()).willReturn(List.of(agent));
-        given(agentMapper.agentToAgentDto(agent)).willReturn(agentDto);
+    void getAgentById_shouldReturnAgentDto_whenFound() {
+        given(agentRepository.findById(agentId)).willReturn(Optional.of(agent1));
+        given(agentMapper.agentToAgentDto(agent1)).willReturn(agentDto1);
 
-        // When
-        List<AgentDto> result = agentService.getAllAgents();
+        AgentDto foundDto = agentService.getAgentById(agentId);
 
-        // Then
+        assertNotNull(foundDto);
+        assertEquals(agentId, foundDto.getId());
+        assertEquals(agentEmail, foundDto.getEmail());
+        then(agentRepository).should().findById(agentId);
+        then(agentMapper).should().agentToAgentDto(agent1);
+    }
+
+    @Test
+    void getAgentById_shouldThrowResourceNotFoundException_whenNotFound() {
+        Long nonExistentId = 99L;
+        given(agentRepository.findById(nonExistentId)).willReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            agentService.getAgentById(nonExistentId);
+        });
+
+        then(agentRepository).should().findById(nonExistentId);
+        then(agentMapper).should(never()).agentToAgentDto(any());
+    }
+
+    @Test
+    void findAgents_shouldReturnAllAgents_whenNoFilters() {
+        given(agentRepository.findAll()).willReturn(List.of(agent1));
+        given(agentMapper.agentToAgentDto(agent1)).willReturn(agentDto1);
+
+        List<AgentDto> result = agentService.findAgents(null, null);
+
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(agentDto.getId(), result.get(0).getId());
         then(agentRepository).should().findAll();
-        then(agentMapper).should().agentToAgentDto(agent);
     }
 
     @Test
-    @DisplayName("Get Agent By ID - Success")
-    void getAgentById_shouldReturnAgentDto_whenFound() {
-        // Given
-        given(agentRepository.findById(1L)).willReturn(Optional.of(agent));
-        given(agentMapper.agentToAgentDto(agent)).willReturn(agentDto);
-
-        // When
-        AgentDto foundDto = agentService.getAgentById(1L);
-
-        // Then
-        assertNotNull(foundDto);
-        assertEquals(agentDto.getId(), foundDto.getId());
-        assertEquals(agentDto.getEmail(), foundDto.getEmail());
-        then(agentRepository).should().findById(1L);
-        then(agentMapper).should().agentToAgentDto(agent);
-    }
-
-    @Test
-    @DisplayName("Get Agent By ID - Not Found")
-    void getAgentById_shouldThrowResourceNotFoundException_whenNotFound() {
-        // Given
-        given(agentRepository.findById(99L)).willReturn(Optional.empty());
-
-        // When & Then
-        assertThrows(ResourceNotFoundException.class, () -> agentService.getAgentById(99L));
-        then(agentRepository).should().findById(99L);
-        then(agentMapper).should(never()).agentToAgentDto(any());
-    }
-
-    @Test
-    @DisplayName("Get Agent By Email - Success")
-    void getAgentByEmail_shouldReturnAgentDto_whenFound() {
-        // Given
-        given(agentRepository.findAgentByUserEmail("agent@test.com")).willReturn(Optional.of(agent));
-        given(agentMapper.agentToAgentDto(agent)).willReturn(agentDto);
-
-        // When
-        AgentDto foundDto = agentService.getAgentByEmail("agent@test.com");
-
-        // Then
-        assertNotNull(foundDto);
-        assertEquals(agentDto.getEmail(), foundDto.getEmail());
-        then(agentRepository).should().findAgentByUserEmail("agent@test.com");
-        then(agentMapper).should().agentToAgentDto(agent);
-    }
-
-    @Test
-    @DisplayName("Get Agent By Email - Not Found")
-    void getAgentByEmail_shouldThrowResourceNotFoundException_whenNotFound() {
-        // Given
-        given(agentRepository.findAgentByUserEmail("notfound@test.com")).willReturn(Optional.empty());
-
-        // When & Then
-        assertThrows(ResourceNotFoundException.class, () -> agentService.getAgentByEmail("notfound@test.com"));
-        then(agentRepository).should().findAgentByUserEmail("notfound@test.com");
-        then(agentMapper).should(never()).agentToAgentDto(any());
-    }
-
-    @Test
-    @DisplayName("Get Agents By User Name - Success")
-    void getAgentsByUserName_shouldReturnListOfAgentDtos() {
-        // Given
+    void findAgents_shouldFilterByName_whenNameProvided() {
         String name = "Test";
-        given(agentRepository.findAgentsByUserFirstNameContainingOrUserLastNameContaining(name, name)).willReturn(List.of(agent));
-        given(agentMapper.agentToAgentDto(agent)).willReturn(agentDto);
+        given(agentRepository.findAgentsByUserFirstNameContainingOrUserLastNameContaining(name, name)).willReturn(List.of(agent1));
+        given(agentMapper.agentToAgentDto(agent1)).willReturn(agentDto1);
 
-        // When
-        List<AgentDto> result = agentService.getAgentsByUserName(name);
+        List<AgentDto> result = agentService.findAgents(name, null);
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.size());
         then(agentRepository).should().findAgentsByUserFirstNameContainingOrUserLastNameContaining(name, name);
-        then(agentMapper).should().agentToAgentDto(agent);
     }
 
     @Test
-    @DisplayName("Get Agents By Department - Success")
-    void getAgentsByDepartment_shouldReturnListOfAgentDtos() {
-        // Given
-        String department = "Support";
-        given(agentRepository.findAgentsByDepartment(department)).willReturn(List.of(agent));
-        given(agentMapper.agentToAgentDto(agent)).willReturn(agentDto);
+    void findAgents_shouldFilterByDepartment_whenDepartmentProvided() {
+        String deptName = "Teknik";
+        given(agentRepository.findAgentsByDepartmentNameContainingIgnoreCase(deptName)).willReturn(List.of(agent1));
+        given(agentMapper.agentToAgentDto(agent1)).willReturn(agentDto1);
 
-        // When
-        List<AgentDto> result = agentService.getAgentsByDepartment(department);
+        List<AgentDto> result = agentService.findAgents(null, deptName);
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(department, result.get(0).getDepartment());
-        then(agentRepository).should().findAgentsByDepartment(department);
-        then(agentMapper).should().agentToAgentDto(agent);
+        then(agentRepository).should().findAgentsByDepartmentNameContainingIgnoreCase(deptName);
     }
 
     @Test
-    @DisplayName("Create Agent - Success")
+    void findAgents_shouldFilterByBoth_whenBothProvided() {
+        String name = "Test";
+        String deptName = "Teknik";
+        given(agentRepository.findByDepartmentNameContainingAndUserNameContaining(deptName, name)).willReturn(List.of(agent1));
+        given(agentMapper.agentToAgentDto(agent1)).willReturn(agentDto1);
+
+        List<AgentDto> result = agentService.findAgents(name, deptName);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        then(agentRepository).should().findByDepartmentNameContainingAndUserNameContaining(deptName, name);
+    }
+
+    @Test
     void createAgent_shouldSaveAndReturnAgent() {
-        // Given
         AgentDto dtoToSave = AgentDto.builder()
-                .email("new.agent@test.com")
+                .email("new@agent.com")
                 .firstName("New")
                 .lastName("Agent")
                 .password("password123")
-                .department("Sales")
+                .departmentName("Teknik Destek")
                 .build();
 
         given(userRepository.findByEmail(dtoToSave.getEmail())).willReturn(Optional.empty());
+        given(departmentRepository.findByName(dtoToSave.getDepartmentName())).willReturn(Optional.of(techSupport));
         given(passwordEncoder.encode(dtoToSave.getPassword())).willReturn("hashedPassword");
-        given(agentRepository.save(any(Agent.class))).willAnswer(invocation -> {
-            Agent saved = invocation.getArgument(0);
-            saved.setId(2L);
-            saved.getUser().setId(2L);
-            saved.setCreatedAt(LocalDateTime.now()); // Set timestamps for verification
-            saved.setUpdatedAt(LocalDateTime.now());
-            return saved;
-        });
-        given(agentMapper.agentToAgentDto(any(Agent.class))).willAnswer(invocation -> {
-            Agent saved = invocation.getArgument(0);
-            return AgentDto.builder()
-                    .id(saved.getId())
-                    .email(saved.getUser().getEmail())
-                    .firstName(saved.getUser().getFirstName())
-                    .lastName(saved.getUser().getLastName())
-                    .department(saved.getDepartment())
-                    .createdAt(saved.getCreatedAt())
-                    .updatedAt(saved.getUpdatedAt())
-                    .build();
-        });
 
-        // When
-        AgentDto savedDto = agentService.createAgent(dtoToSave);
+        Agent agentToSave = Agent.builder().department(techSupport).user(User.builder().email(dtoToSave.getEmail()).build()).build();
+        Agent savedAgent = Agent.builder().id(2L).department(techSupport).user(User.builder().id(2L).email(dtoToSave.getEmail()).build()).build();
 
-        // Then
-        assertNotNull(savedDto);
-        assertEquals(2L, savedDto.getId());
-        assertEquals(dtoToSave.getEmail(), savedDto.getEmail());
-        assertEquals(dtoToSave.getDepartment(), savedDto.getDepartment());
-        assertNotNull(savedDto.getCreatedAt()); // Ensure timestamps are set
+        given(agentRepository.save(any(Agent.class))).willReturn(savedAgent);
+        given(agentMapper.agentToAgentDto(savedAgent)).willReturn(AgentDto.builder().id(2L).email(dtoToSave.getEmail()).build());
+
+        AgentDto resultDto = agentService.createAgent(dtoToSave);
+
+        assertNotNull(resultDto);
+        assertEquals(2L, resultDto.getId());
+        assertEquals(dtoToSave.getEmail(), resultDto.getEmail());
+
         then(userRepository).should().findByEmail(dtoToSave.getEmail());
+        then(departmentRepository).should().findByName(dtoToSave.getDepartmentName());
         then(passwordEncoder).should().encode(dtoToSave.getPassword());
         then(agentRepository).should().save(any(Agent.class));
-        then(agentMapper).should().agentToAgentDto(any(Agent.class));
+        then(agentMapper).should().agentToAgentDto(savedAgent);
     }
 
     @Test
-    @DisplayName("Create Agent - Email Exists")
-    void createAgent_shouldThrowEmailExistsException_whenEmailInUse() {
-        // Given
-        AgentDto dtoToSave = AgentDto.builder().email("agent@test.com").password("pwd").build();
-        given(userRepository.findByEmail(dtoToSave.getEmail())).willReturn(Optional.of(user));
+    void createAgent_shouldThrowEmailExistsException() {
+        AgentDto dtoToSave = AgentDto.builder().email(agentEmail).build();
+        given(userRepository.findByEmail(agentEmail)).willReturn(Optional.of(agentUser1));
 
-        // When & Then
         assertThrows(EmailAlreadyExistsException.class, () -> agentService.createAgent(dtoToSave));
-        then(userRepository).should().findByEmail(dtoToSave.getEmail());
-        then(passwordEncoder).should(never()).encode(anyString());
-        then(agentRepository).should(never()).save(any(Agent.class));
-    }
 
-    @Test
-    @DisplayName("Update Agent - Success")
-    void updateAgent_shouldUpdateAndReturnAgent() {
-        // Given
-        Long agentId = 1L;
-        AgentDto updatesDto = AgentDto.builder()
-                .firstName("Updated First") // Name change
-                .lastName("Updated Last")
-                .email("updated.agent@test.com") // Email change
-                .department("Updated Support") // Department change
-                // No password -> should not update password
-                .build();
-
-        // Need the existing agent with user for the update process
-        given(agentRepository.findById(agentId)).willReturn(Optional.of(agent));
-        // Assume email update is valid (email not taken)
-        given(userRepository.findByEmail(updatesDto.getEmail())).willReturn(Optional.empty());
-        // Mock the save operation to return the updated entity
-        given(agentRepository.save(any(Agent.class))).willAnswer(invocation -> invocation.getArgument(0)); // Return the input
-        // Mock the mapper to return the DTO based on the updated entity
-        given(agentMapper.agentToAgentDto(any(Agent.class))).willAnswer(invocation -> {
-            Agent updated = invocation.getArgument(0);
-            // Manually create DTO reflecting changes for assertion
-            return AgentDto.builder()
-                    .id(updated.getId())
-                    .email(updated.getUser().getEmail()) // Updated email
-                    .firstName(updated.getUser().getFirstName()) // Updated name
-                    .lastName(updated.getUser().getLastName())
-                    .department(updated.getDepartment()) // Updated department
-                    .createdAt(updated.getCreatedAt())
-                    .updatedAt(updated.getUpdatedAt()) // Should be updated now
-                    .build();
-        });
-
-
-        // When
-        AgentDto updatedDto = agentService.updateAgent(agentId, updatesDto);
-
-        // Then
-        assertNotNull(updatedDto);
-        assertEquals(agentId, updatedDto.getId());
-        assertEquals(updatesDto.getEmail(), updatedDto.getEmail());
-        assertEquals(updatesDto.getFirstName(), updatedDto.getFirstName());
-        assertEquals(updatesDto.getDepartment(), updatedDto.getDepartment());
-        assertNotEquals(agent.getUpdatedAt(), updatedDto.getUpdatedAt()); // Check if updatedAt changed
-
-        then(agentRepository).should().findById(agentId);
-        then(userRepository).should().findByEmail(updatesDto.getEmail());
-        then(passwordEncoder).should(never()).encode(anyString()); // Password not provided, shouldn't encode
-        then(agentRepository).should().save(any(Agent.class));
-        then(agentMapper).should().agentToAgentDto(any(Agent.class));
-    }
-
-    @Test
-    @DisplayName("Update Agent - Update Password Success")
-    void updateAgent_shouldUpdatePassword_whenPasswordProvided() {
-        // Given
-        Long agentId = 1L;
-        String newPassword = "newPassword123";
-        AgentDto updatesDto = AgentDto.builder()
-                .firstName(agent.getUser().getFirstName()) // Keep other fields same
-                .lastName(agent.getUser().getLastName())
-                .email(agent.getUser().getEmail())
-                .department(agent.getDepartment())
-                .password(newPassword) // Provide new password
-                .build();
-
-        given(agentRepository.findById(agentId)).willReturn(Optional.of(agent));
-        // If email is not changing, no need to mock userRepository.findByEmail
-        given(passwordEncoder.encode(newPassword)).willReturn("hashedNewPassword");
-        given(agentRepository.save(any(Agent.class))).willReturn(agent); // Return same agent for simplicity
-        given(agentMapper.agentToAgentDto(agent)).willReturn(agentDto); // Return original DTO
-
-        // When
-        agentService.updateAgent(agentId, updatesDto);
-
-        // Then
-        then(agentRepository).should().findById(agentId);
-        then(passwordEncoder).should().encode(newPassword); // Verify password encoding happened
-        then(agentRepository).should().save(any(Agent.class));
-    }
-
-
-    @Test
-    @DisplayName("Update Agent - Not Found")
-    void updateAgent_shouldThrowNotFoundException_whenAgentNotFound() {
-        // Given
-        Long nonExistentId = 99L;
-        AgentDto updatesDto = AgentDto.builder().email("any@email.com").build();
-        given(agentRepository.findById(nonExistentId)).willReturn(Optional.empty());
-
-        // When & Then
-        assertThrows(ResourceNotFoundException.class, () -> agentService.updateAgent(nonExistentId, updatesDto));
-        then(agentRepository).should().findById(nonExistentId);
-        then(userRepository).should(never()).findByEmail(anyString());
+        then(departmentRepository).should(never()).findByName(anyString());
         then(agentRepository).should(never()).save(any());
     }
 
     @Test
-    @DisplayName("Update Agent - Email Exists")
-    void updateAgent_shouldThrowEmailExistsException_whenEmailTaken() {
-        // Given
-        Long agentId = 1L;
-        AgentDto updatesDto = AgentDto.builder()
-                .email("existing.other@test.com") // Email that will be found
-                .firstName("Test").lastName("Agent").department("Support") // Include required fields
+    void createAgent_shouldThrowResourceNotFoundException_whenDeptNotFound() {
+        AgentDto dtoToSave = AgentDto.builder()
+                .email("new@agent.com")
+                .departmentName("Olmayan Departman")
                 .build();
-        User otherUser = User.builder().id(2L).email("existing.other@test.com").build();
 
-        given(agentRepository.findById(agentId)).willReturn(Optional.of(agent));
-        // Mock userRepository to find another user with the target email
-        given(userRepository.findByEmail(updatesDto.getEmail())).willReturn(Optional.of(otherUser));
+        given(userRepository.findByEmail(dtoToSave.getEmail())).willReturn(Optional.empty());
+        given(departmentRepository.findByName(dtoToSave.getDepartmentName())).willReturn(Optional.empty());
 
-        // When & Then
-        assertThrows(EmailAlreadyExistsException.class, () -> agentService.updateAgent(agentId, updatesDto));
+        assertThrows(ResourceNotFoundException.class, () -> agentService.createAgent(dtoToSave));
 
-        then(agentRepository).should().findById(agentId);
-        then(userRepository).should().findByEmail(updatesDto.getEmail());
-        then(agentRepository).should(never()).save(any()); // Should not save if email exists
+        then(userRepository).should().findByEmail(dtoToSave.getEmail());
+        then(departmentRepository).should().findByName(dtoToSave.getDepartmentName());
+        then(agentRepository).should(never()).save(any());
     }
 
+    @Test
+    void updateAgent_shouldUpdateAndReturnDto() {
+        AgentDto updatesDto = AgentDto.builder()
+                .firstName("Updated")
+                .lastName("Agent")
+                .email(agentEmail)
+                .departmentName("Teknik Destek")
+                .build();
+
+        given(agentRepository.findById(agentId)).willReturn(Optional.of(agent1));
+        given(agentRepository.save(agent1)).willReturn(agent1);
+        given(agentMapper.agentToAgentDto(agent1)).willReturn(agentDto1);
+
+        AgentDto resultDto = agentService.updateAgent(agentId, updatesDto);
+
+        assertNotNull(resultDto);
+        then(agentRepository).should().findById(agentId);
+        then(agentRepository).should().save(agent1);
+
+        ArgumentCaptor<Agent> agentCaptor = ArgumentCaptor.forClass(Agent.class);
+        then(agentRepository).should().save(agentCaptor.capture());
+        assertEquals("Updated", agentCaptor.getValue().getUser().getFirstName());
+    }
 
     @Test
-    @DisplayName("Delete Agent By ID - Success")
-    void deleteAgentById_shouldCallRepositoryDelete_whenExists() {
-        // Given
-        Long agentId = 1L;
+    void deleteAgentById_shouldDelete_whenNoTickets() {
         given(agentRepository.existsById(agentId)).willReturn(true);
-        willDoNothing().given(agentRepository).deleteById(agentId); // Mock void method
+        given(ticketRepository.existsByAssignedAgentId(agentId)).willReturn(false);
+        willDoNothing().given(agentRepository).deleteById(agentId);
 
-        // When
-        agentService.deleteAgentById(agentId);
+        assertDoesNotThrow(() -> agentService.deleteAgentById(agentId));
 
-        // Then
         then(agentRepository).should().existsById(agentId);
+        then(ticketRepository).should().existsByAssignedAgentId(agentId);
         then(agentRepository).should().deleteById(agentId);
     }
 
     @Test
-    @DisplayName("Delete Agent By ID - Not Found")
-    void deleteAgentById_shouldThrowNotFoundException_whenNotExists() {
-        // Given
+    void deleteAgentById_shouldThrowNotFound_whenAgentNotExists() {
         Long nonExistentId = 99L;
         given(agentRepository.existsById(nonExistentId)).willReturn(false);
 
-        // When & Then
         assertThrows(ResourceNotFoundException.class, () -> agentService.deleteAgentById(nonExistentId));
 
         then(agentRepository).should().existsById(nonExistentId);
-        then(agentRepository).should(never()).deleteById(anyLong()); // Delete should not be called
+        then(ticketRepository).should(never()).existsByAssignedAgentId(anyLong());
+        then(agentRepository).should(never()).deleteById(anyLong());
+    }
+
+    @Test
+    void deleteAgentById_shouldThrowInUse_whenTicketsExist() {
+        given(agentRepository.existsById(agentId)).willReturn(true);
+        given(ticketRepository.existsByAssignedAgentId(agentId)).willReturn(true);
+
+        assertThrows(ResourceInUseException.class, () -> agentService.deleteAgentById(agentId));
+
+        then(agentRepository).should().existsById(agentId);
+        then(ticketRepository).should().existsByAssignedAgentId(agentId);
+        then(agentRepository).should(never()).deleteById(anyLong());
     }
 }
