@@ -24,17 +24,17 @@ services:
       - JWT_SECRET_KEY=lO2aZgqJ7B3yV/G4K+N8E/uD9F/rS6wJ5H+tXqY3Z0w=
       - APP_USER=user
       - APP_PASSWORD=password
-
-  db:
-    image: postgres:15
-    container_name: crm-db
-    environment:
-      - POSTGRES_DB=crm_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-volumes:
-  postgres-data:
+#
+#  db:
+#    image: postgres:15
+#    container_name: crm-db
+#    environment:
+#      - POSTGRES_DB=crm_db
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=postgres
+#    ports:
+#      - "5433:5432"
+#    volumes:
+#      - postgres-data:/var/lib/postgresql/data
+#volumes:
+#  postgres-data:
