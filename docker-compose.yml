@@ -9,11 +9,18 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=crm_db
+#      - LOCAL
+#      - DB_HOST=db
+#      - DB_PORT=5432
+#      - DB_NAME=crm_db
+#      - DB_USERNAME=postgres
+#      - DB_PASSWORD=postgres
+#      - RAILWAY
+      - DB_HOST=ballast.proxy.rlwy.net
+      - DB_PORT=20393
+      - DB_NAME=railway
       - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
+      - DB_PASSWORD=IClruMeshWjOJoiDLFfytsWUQdeHoliD
       - JWT_SECRET_KEY=lO2aZgqJ7B3yV/G4K+N8E/uD9F/rS6wJ5H+tXqY3Z0w=
       - APP_USER=user
       - APP_PASSWORD=password
