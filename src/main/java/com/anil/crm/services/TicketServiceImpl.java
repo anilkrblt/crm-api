@@ -1,17 +1,9 @@
 package com.anil.crm.services;
 
 
-import com.anil.crm.domain.Agent;
-import com.anil.crm.domain.Customer;
-import com.anil.crm.domain.Department;
-import com.anil.crm.domain.Ticket;
-import com.anil.crm.domain.TicketPriority;
-import com.anil.crm.domain.TicketStatus;
+import com.anil.crm.domain.*;
 import com.anil.crm.exceptions.ResourceNotFoundException;
-import com.anil.crm.repositories.AgentRepository;
-import com.anil.crm.repositories.CustomerRepository;
-import com.anil.crm.repositories.DepartmentRepository;
-import com.anil.crm.repositories.TicketRepository;
+import com.anil.crm.repositories.*;
 import com.anil.crm.web.mappers.TicketMapper;
 import com.anil.crm.web.models.TicketDto;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,8 +25,8 @@ public class TicketServiceImpl implements TicketService {
     private final CustomerRepository customerRepository;
     private final DepartmentRepository departmentRepository;
     private final AgentRepository agentRepository;
+    private final UserRepository userRepository;
     private final TicketMapper ticketMapper;
-
 
     @Override
     @Transactional(readOnly = true)
@@ -192,6 +185,24 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket updatedTicket = ticketRepository.save(ticket);
         log.info("Ticket status updated successfully for id: {}", updatedTicket.getId());
+        return ticketMapper.ticketToTicketDto(updatedTicket);
+    }
+
+    @Transactional
+    @Override
+    public TicketDto assignAgentToTicket(Long id, Long agentId) {
+
+
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("id with ticket " + id + "doesnt exist"));
+
+        Agent agent = agentRepository.findById(agentId)
+                .orElseThrow(() -> new ResourceNotFoundException("id with agent " + agentId + "doesnt exist"));
+
+
+        ticket.setAssignedAgent(agent);
+        Ticket updatedTicket = ticketRepository.save(ticket);
+
         return ticketMapper.ticketToTicketDto(updatedTicket);
     }
 

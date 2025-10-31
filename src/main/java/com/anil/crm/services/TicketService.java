@@ -29,4 +29,6 @@ public interface TicketService {
     void deleteTicketById(Long id);
 
     TicketDto updateTicketStatus(Long ticketId, TicketStatus status);
+
+    TicketDto assignAgentToTicket(Long id, Long agentId);
 }

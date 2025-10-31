@@ -118,6 +118,7 @@ public class TicketsController {
         return ResponseEntity.created(location).body(createdTicket);
     }
 
+
     @Operation(summary = "Mevcut bir bileti güncelle (Sadece Admin/Ajan)",
             description = "Biletin konu, açıklama, durum, öncelik gibi temel bilgilerini günceller. " +
                     "Departman veya atanan ajan değişikliği genellikle ayrı endpoint'lerle yapılır.")
@@ -152,6 +153,24 @@ public class TicketsController {
             @RequestParam TicketStatus status) {
 
         return ResponseEntity.ok(ticketService.updateTicketStatus(id, status));
+    }
+
+    @Operation(summary = "Bir bilete ajan ata (Sadece Admin/Ajan)",
+            description = "Belirli bir bileti, ID'si verilen bir ajana atar (assign eder).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Ajan başarıyla atandı"),
+            @ApiResponse(responseCode = "404", description = "Bilet veya Ajan bulunamadı", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Yetkisiz erişim", content = @Content)
+    })
+    @PatchMapping("/{id}/assign-agent")
+    public ResponseEntity<TicketDto> assignAgentToTicket(
+            @Parameter(description = "Bilet ID'si")
+            @PathVariable Long id,
+            @Parameter(description = "Atanacak ajanın ID'si")
+            @RequestParam Long agentId) {
+
+        TicketDto updatedTicket = ticketService.assignAgentToTicket(id, agentId);
+        return ResponseEntity.ok(updatedTicket);
     }
 
     @Operation(summary = "Bir bileti ID ile sil (Sadece Admin/Ajan)")

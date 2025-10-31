@@ -108,6 +108,16 @@
 				{
 					"name": "updateDepartment",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJmaXJzdE5hbWUiOiJBbmlsIiwibGFzdE5hbWUiOiJrYXJhYnVsdXQiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VySWQiOjQxLCJzdWIiOiJhbmlsLmthcmFidWx1dEBob3RtYWlsLmNvbSIsImlhdCI6MTc2MTg5MzgzMSwiZXhwIjoxNzYxOTgwMjMxfQ.TAlTJCKrxFSqI-cwTYC01oO0ZxQJg3KgT4zpdAVnjBs",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [],
 						"body": {
@@ -120,16 +130,14 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8080/api/departments/1",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/departments/37",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "8080",
 							"path": [
 								"api",
 								"departments",
-								"1"
+								"37"
 							]
 						}
 					},
@@ -138,19 +146,27 @@
 				{
 					"name": "deleteDepartment",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJmaXJzdE5hbWUiOiJBbmlsIiwibGFzdE5hbWUiOiJrYXJhYnVsdXQiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VySWQiOjQxLCJzdWIiOiJhbmlsLmthcmFidWx1dEBob3RtYWlsLmNvbSIsImlhdCI6MTc2MTg5MzgzMSwiZXhwIjoxNzYxOTgwMjMxfQ.TAlTJCKrxFSqI-cwTYC01oO0ZxQJg3KgT4zpdAVnjBs",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/api/departments/6",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/departments/37",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "8080",
 							"path": [
 								"api",
 								"departments",
-								"6"
+								"37"
 							]
 						}
 					},
@@ -161,26 +177,6 @@
 		{
 			"name": "Agent",
 			"item": [
-				{
-					"name": "getAgentById",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "https://localhost8080/api/agents/1",
-							"protocol": "https",
-							"host": [
-								"localhost8080"
-							],
-							"path": [
-								"api",
-								"agents",
-								"1"
-							]
-						}
-					},
-					"response": []
-				},
 				{
 					"name": "getAllAgents",
 					"request": {
@@ -202,20 +198,54 @@
 					"response": []
 				},
 				{
-					"name": "searchAgentsByNameAndDepartment",
+					"name": "getAgentById",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/api/agents",
-							"protocol": "http",
+							"raw": "https://localhost8080/api/agents/1",
+							"protocol": "https",
 							"host": [
-								"localhost"
+								"localhost8080"
 							],
-							"port": "8080",
+							"path": [
+								"api",
+								"agents",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "searchAgentsByNameAndDepartment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJmaXJzdE5hbWUiOiJBbmlsIiwibGFzdE5hbWUiOiJrYXJhYnVsdXQiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VySWQiOjQxLCJzdWIiOiJhbmlsLmthcmFidWx1dEBob3RtYWlsLmNvbSIsImlhdCI6MTc2MTg5MzgzMSwiZXhwIjoxNzYxOTgwMjMxfQ.TAlTJCKrxFSqI-cwTYC01oO0ZxQJg3KgT4zpdAVnjBs",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/agents?name=an",
+							"host": [
+								"{{baseUrl}}"
+							],
 							"path": [
 								"api",
 								"agents"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "an"
+								}
 							]
 						}
 					},
@@ -304,18 +334,27 @@
 				{
 					"name": "deleteAgent",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJmaXJzdE5hbWUiOiJBbmlsIiwibGFzdE5hbWUiOiJrYXJhYnVsdXQiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VySWQiOjQxLCJzdWIiOiJhbmlsLmthcmFidWx1dEBob3RtYWlsLmNvbSIsImlhdCI6MTc2MTg5MzgzMSwiZXhwIjoxNzYxOTgwMjMxfQ.TAlTJCKrxFSqI-cwTYC01oO0ZxQJg3KgT4zpdAVnjBs",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "https://localhost8080/api/agents/1",
-							"protocol": "https",
+							"raw": "{{baseUrl}}/api/agents/34",
 							"host": [
-								"localhost8080"
+								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"agents",
-								"1"
+								"34"
 							]
 						}
 					},
@@ -349,33 +388,27 @@
 				{
 					"name": "getCustomerById",
 					"request": {
-						"method": "GET",
-						"header": []
-					},
-					"response": []
-				},
-				{
-					"name": "searchCustomerByEmail",
-					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJmaXJzdE5hbWUiOiJBbmlsIiwibGFzdE5hbWUiOiJrYXJhYnVsdXQiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VySWQiOjQxLCJzdWIiOiJhbmlsLmthcmFidWx1dEBob3RtYWlsLmNvbSIsImlhdCI6MTc2MTg5MzgzMSwiZXhwIjoxNzYxOTgwMjMxfQ.TAlTJCKrxFSqI-cwTYC01oO0ZxQJg3KgT4zpdAVnjBs",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/api/customers/email?email=ali.veli@email.com",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/customers/28",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "8080",
 							"path": [
 								"api",
 								"customers",
-								"email"
-							],
-							"query": [
-								{
-									"key": "email",
-									"value": "ali.veli@email.com"
-								}
+								"28"
 							]
 						}
 					},
@@ -402,7 +435,7 @@
 					"response": []
 				},
 				{
-					"name": "createCustomer",
+					"name": "create/register Customer",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -560,28 +593,6 @@
 								"api",
 								"tickets",
 								"customer",
-								"1"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "getTicketsByAgentId",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/tickets/agent/1",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"tickets",
-								"agent",
 								"1"
 							]
 						}
@@ -949,12 +960,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8080/api/auth/login",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/auth/login",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "8080",
 							"path": [
 								"api",
 								"auth",
