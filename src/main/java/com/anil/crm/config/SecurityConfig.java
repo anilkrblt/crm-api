@@ -4,7 +4,7 @@ import com.anil.crm.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus; // <-- Bu import gerekebilir
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -29,11 +29,10 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
-    // Herkese açık olacak URL'lerin listesi
     private static final String[] WHITE_LIST_URLS = {
-            "/api/auth/**",      // Login, register vb. tüm auth endpoint'leri
-            "/swagger-ui/**",    // Swagger UI
-            "/v3/api-docs/**",   // Swagger JSON
+            "/api/auth/**",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
             "/swagger-resources/**",
             "/swagger-ui.html"
     };
@@ -41,25 +40,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // API'ler için CSRF genellikle devre dışı bırakılır
+                .csrf(csrf -> csrf.disable())
 
-                // 1. KURAL: Kimlik doğrulama hatalarında yönlendirme yapma, 401 hatası dön.
-                // Önceki "GET not supported" hatanızın çözümü budur.
                 .exceptionHandling(exceptions ->
-                        exceptions.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                )
+                        exceptions.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 
-                // 2. KURAL: Session politikasını STATELESS yap (JWT için zorunlu)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // 3. KURAL: URL bazlı yetkilendirme
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(WHITE_LIST_URLS).permitAll() // Beyaz listeye izin ver
-                        .anyRequest().authenticated()                 // Geri kalan her şeyi koru
+                        .requestMatchers(WHITE_LIST_URLS).permitAll()
+                        .anyRequest().authenticated()
                 )
 
-                .authenticationProvider(authenticationProvider()) // Kendi provider'ımızı ekliyoruz
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // JWT filtremizi ekliyoruz
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
